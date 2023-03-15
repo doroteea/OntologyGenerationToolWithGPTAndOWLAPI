@@ -1,0 +1,14 @@
+<p>Generate ontology</p>
+<label>Describe your ontology:</label>
+<button (click)="generateFunction(myPrompt.value)">
+  Generate
+</button><br>
+<div class="input-box">
+  <textarea placeholder="Type your message here..." #myPrompt></textarea>
+</div>
+<div class="output-box">
+ <pre>
+   {{onto}}
+ </pre>
+</div>
+
