@@ -1,14 +1,23 @@
-<p>Generate ontology</p>
-<label>Describe your ontology:</label>
-<button (click)="generateFunction(myPrompt.value)">
-  Generate
-</button><br>
-<div class="input-box">
-  <textarea placeholder="Type your message here..." #myPrompt></textarea>
-</div>
-<div class="output-box">
+<div id="myDiv">
+  <p class = "title">Generate ontology tool with AI</p>
+  <div class = "labels">
+    <label>Describe your ontology:</label>
+    <label class = "label2">Generated ontology:</label>
+  </div>
+  <div class="grid-container">
+    <div class="input-box">
+      <textarea placeholder="Type your message here..." #myPrompt></textarea>
+    </div>
+    <div class="output-box" aria-placeholder="The ontology will be generated here">
  <pre>
    {{onto}}
  </pre>
+    </div>
+  </div>
+  <button class = "button" id="deactivateBtn" (click)="generateFunction(myPrompt.value)">
+    Generate
+  </button>
 </div>
+
+
 

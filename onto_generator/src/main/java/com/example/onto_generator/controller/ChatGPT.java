@@ -4,56 +4,76 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.http.HttpClient;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
+@Controller
 @Slf4j
-@RestController
 @CrossOrigin(origins = "http://localhost:4200")
 public class ChatGPT {
 
     @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/generate")
     public ResponseEntity<List<String>> generate(@RequestBody String prompt) throws Exception {
-       log.info("Generate with gpt-3 an ontology based on a prompt text");
-       return  ResponseEntity.ok(Collections.singletonList(chatGPT(prompt)));
+        log.info("Generate with gpt-3 an ontology based on a prompt text");
+        return  ResponseEntity.ok(Collections.singletonList(chatGPT(prompt)));
     }
 
     private String chatGPT(String text) throws Exception {
         String url = "https://api.openai.com/v1/completions";
         String API_KEY = "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";
-        HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        HttpPost httpPost = new HttpPost("https://api.openai.com/v1/chat/completions");
 
-        con.setRequestMethod("POST");
-        con.setRequestProperty("Content-Type", "application/json");
-        con.setRequestProperty("Authorization", "Bearer "+API_KEY);
+        httpPost.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+        httpPost.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + API_KEY);
 
-        JSONObject data = new JSONObject();
-        data.put("model","text-davinci-003");
-        data.put("prompt", text);
-        data.put("max_tokens", 4000);
-        data.put("temperature", 1.0);
+        JSONObject json = new JSONObject();
+        json.put("model", "gpt-3.5-turbo");
 
-        con.setDoOutput(true);
-        con.getOutputStream().write(data.toString().getBytes());
+        JSONArray messages = new JSONArray();
+        JSONObject message = new JSONObject();
+        message.put("role", "user");
+        message.put("content", text);
+        messages.put(message);
 
-        String output = new BufferedReader(new InputStreamReader(con.getInputStream())).lines()
-                .reduce((a, b) -> a + b).get();
+        json.put("messages", messages);
 
-        String response = new JSONObject(output).getJSONArray("choices").getJSONObject(0).getString("text");
+        String requestBody = json.toString();
 
-        System.out.println(response);
-        return response;
+        StringEntity entity = new StringEntity(requestBody);
+        httpPost.setEntity(entity);
+
+        HttpResponse response = httpClient.execute(httpPost);
+        HttpEntity responseEntity = response.getEntity();
+        JSONObject jsonResponse = new JSONObject(EntityUtils.toString(responseEntity));
+        String ontology = jsonResponse.getJSONArray("choices")
+                .getJSONObject(0)
+                .getJSONObject("message")
+                .getString("content");
+        System.out.println(ontology);
+        return ontology;
     }
-
-//    public static void main(String[] args) throws Exception {
-//        String prompt =  "Please create an ontology of age-related macular degeneration (AMD) that includes concepts such as drusen, geographic atrophy, choroidal neovascularization, and retinal pigment epithelium (RPE), and roles such as hasDrusen, hasGeographicAtrophy, hasChoroidalNeovascularization, and hasRPE. Additionally, include relationships between these concepts and any other relevant concepts, such as the relationship between drusen and RPE damage.";
-//        String p = "Create an ontology that can compile in .racer for a car dealership that includes concepts such as Car, Model, Make, Dealer, and Customer, and roles such as hasModel, hasMake, and hasCustomer";
-//        chatGPT(p);
-//    }
 }

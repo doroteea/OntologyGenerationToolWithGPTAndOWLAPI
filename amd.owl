@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE rdf:RDF [
+    <!ENTITY xsd "http://www.w3.org/2001/XMLSchema#" >
+    <!ENTITY owl "http://www.w3.org/2002/07/owl#" >
+    <!ENTITY rdf "http://www.w3.org/1999/02/22-rdf-syntax-ns#" >
+    <!ENTITY rdfs "http://www.w3.org/2000/01/rdf-schema#" >
+]>
+
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+    xmlns:aro="http://www.semanticweb.org/aro/ontologies/2021/5/age-related-macular-degeneration#"
+    xml:base="http://www.semanticweb.org/aro/ontologies/2021/5/age-related-macular-degeneration"
+    xmlns="http://www.semanticweb.org/aro/ontologies/2021/5/age-related-macular-degeneration#">
+
+    <owl:Ontology rdf:about="http://www.semanticweb.org/aro/ontologies/2021/5/age-related-macular-degeneration"/>
+
+    <!-- Class Definitions -->
+    <owl:Class rdf:about="#AgeRelatedMacularDegeneration">
+        <rdfs:label xml:lang="en">Age Related Macular Degeneration</rdfs:label>
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/HP_0001633"/>
+    </owl:Class>
+
+    <owl:Class rdf:about="#Symptoms">
+        <rdfs:label xml:lang="en">Symptoms</rdfs:label>
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/HP_0000118"/>
+    </owl:Class>
+
+    <owl:Class rdf:about="#Causes">
+        <rdfs:label xml:lang="en">Causes</rdfs:label>
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/HP_0000118"/>
+    </owl:Class>
+
+    <owl:Class rdf:about="#Treatment">
+        <rdfs:label xml:lang="en">Treatment</rdfs:label>
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/CHEBI_23888"/>
+    </owl:Class>
+
+    <owl:Class rdf:about="#Prevention">
+        <rdfs:label xml:lang="en">Prevention</rdfs:label>
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/HP_0012824"/>
+    </owl:Class>
+
+    <!-- Properties -->
+    <owl:ObjectProperty rdf:about="#hasSymptom">
+        <rdfs:subPropertyOf rdf:resource="http://purl.obolibrary.org/obo/RO_0000086"/>
+        <rdfs:domain rdf:resource="#AgeRelatedMacularDegeneration"/>
+        <rdfs:range rdf:resource="#Symptoms"/>
+    </owl:ObjectProperty>
+
+    <owl:ObjectProperty rdf:about="#hasCause">
+        <rdfs:subPropertyOf rdf:resource="http://purl.obolibrary.org/obo/RO_0000086"/>
+        <rdfs:domain rdf:resource="#AgeRelatedMacularDegeneration"/>
+        <rdfs:range rdf:resource="#Causes"/>
+    </owl:ObjectProperty>
+
+    <owl:ObjectProperty rdf:about="#hasTreatment">
+        <rdfs:subPropertyOf rdf:resource="http://purl.obolibrary.org/obo/RO_0000086"/>
+        <rdfs:domain rdf:resource="#AgeRelatedMacularDegeneration"/>
+        <rdfs:range rdf:resource="#Treatment"/>
+    </owl:ObjectProperty>
+
+    <owl:ObjectProperty rdf:about="#hasPrevention">
+        <rdfs:subPropertyOf rdf:resource="http://purl.obolibrary.org/obo/RO_0000086"/>
+        <rdfs:domain rdf:resource="#AgeRelatedMacularDegeneration"/>
+        <rdfs:range rdf:resource="#Prevention"/>
+    </owl:ObjectProperty>
+
+</rdf:RDF>
