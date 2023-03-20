@@ -1,9 +1,13 @@
 <div id="myDiv">
-  <p class = "title">Generate ontology tool with AI</p>
+  <p class = "title">Generate ontology tool</p>
   <div class = "labels">
     <label>Describe your ontology:</label>
+    <button class = "button" id="deactivateBtn" (click)="generateFunction(myPrompt.value)">
+    Generate
+  </button>
     <label class = "label2">Generated ontology:</label>
   </div>
+  <img src="/assets/images/loading2.gif" alt="load" id="myImg"/>
   <div class="grid-container">
     <div class="input-box">
       <textarea placeholder="Type your message here..." #myPrompt></textarea>
@@ -14,9 +18,11 @@
  </pre>
     </div>
   </div>
-  <button class = "button" id="deactivateBtn" (click)="generateFunction(myPrompt.value)">
-    Generate
-  </button>
+  <div>
+    <p>Load an abstract</p>
+    <input type="file" (change)="onFileSelected($event)" />
+  </div>
+
 </div>
 
 

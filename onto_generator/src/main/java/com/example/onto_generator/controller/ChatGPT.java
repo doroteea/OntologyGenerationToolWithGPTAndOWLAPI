@@ -1,14 +1,5 @@
 package com.example.onto_generator.controller;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.http.HttpClient;
-import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.List;
-
+//how can i open in protege an owl file from java code?
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
@@ -20,14 +11,14 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Collections;
+import java.util.List;
 
 @Controller
 @Slf4j
@@ -37,8 +28,8 @@ public class ChatGPT {
     @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/generate")
     public ResponseEntity<List<String>> generate(@RequestBody String prompt) throws Exception {
-        log.info("Generate with gpt-3 an ontology based on a prompt text");
-        return  ResponseEntity.ok(Collections.singletonList(chatGPT(prompt)));
+        log.info("Generate with gpt-3.5 an ontology based on a prompt text");
+        return ResponseEntity.ok(Collections.singletonList(chatGPT(prompt)));
     }
 
     private String chatGPT(String text) throws Exception {
