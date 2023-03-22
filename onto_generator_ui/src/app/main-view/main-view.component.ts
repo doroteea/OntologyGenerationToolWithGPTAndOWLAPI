@@ -99,4 +99,17 @@ export class MainViewComponent implements OnInit {
   }
 
 
+  loadOntology() {
+    this.service.loadOntology().subscribe(
+      (data: any) => {
+        // handle the response data here
+        console.log(data);
+      },
+      (error: any) => {
+        // handle any errors here
+        console.error(error);
+      }
+    );
+  }
+
 }

@@ -1,5 +1,5 @@
-import {Injectable} from "@angular/core";
-import {HttpClient, HttpHeaders, HttpResponse} from "@angular/common/http";
+import { Injectable } from "@angular/core";
+import { HttpClient } from "@angular/common/http";
 
 @Injectable({
   providedIn: 'root'
@@ -7,13 +7,17 @@ import {HttpClient, HttpHeaders, HttpResponse} from "@angular/common/http";
 
 export class GeneratorService {
   generateUrl: string = "http://localhost:8080/generate";
+  loadUrl: string = "http://localhost:8080/load-ontology";
 
   constructor(private http: HttpClient) {
   }
 
-  generateOntology(prompt: string){
-    console.log( this.http.post<HttpResponse<any>>(this.generateUrl ,prompt));
-    return this.http.post<HttpResponse<Array<String>>>(this.generateUrl ,prompt);
+  generateOntology(prompt: string) {
+    return this.http.post<Array<String>>(this.generateUrl, prompt);
+  }
+
+  loadOntology() {
+    return this.http.get<Array<String>>(this.loadUrl);
   }
 
 }

@@ -1,6 +1,6 @@
 package com.example.onto_generator.controller;
 //how can i open in protege an owl file from java code?
-import lombok.extern.slf4j.Slf4j;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
@@ -11,25 +11,67 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.osgi.framework.BundleException;
+import org.protege.editor.core.ProtegeApplication;
+import org.protege.editor.owl.model.OWLModelManager;
+import org.protege.editor.owl.model.OWLWorkspace;
+
+import org.protege.osgi.framework.Launcher;
+import org.semanticweb.owlapi.apibinding.OWLManager;
+import org.semanticweb.owlapi.model.IRI;
+import org.semanticweb.owlapi.model.OWLOntology;
+import org.semanticweb.owlapi.model.OWLOntologyCreationException;
+import org.semanticweb.owlapi.model.OWLOntologyManager;
+import org.semanticweb.owlapi.util.AutoIRIMapper;
+import org.semanticweb.owlapi.util.SimpleIRIMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
+import java.awt.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 
 @Controller
-@Slf4j
 @CrossOrigin(origins = "http://localhost:4200")
 public class ChatGPT {
 
     @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/generate")
     public ResponseEntity<List<String>> generate(@RequestBody String prompt) throws Exception {
-        log.info("Generate with gpt-3.5 an ontology based on a prompt text");
         return ResponseEntity.ok(Collections.singletonList(chatGPT(prompt)));
+    }
+
+    @GetMapping("/open-protege")
+    public ResponseEntity<List<String>> open() throws Exception {
+        String protegePath = "C:\\Users\\Doroteea\\Downloads\\Protege-5.5.0-win\\Protege-5.5.0\\Protege.exe";
+        // Open Protege with the ontology file
+        Runtime.getRuntime().exec(protegePath);
+
+        return ResponseEntity.ok(Collections.singletonList("Ontology loaded successfully"));
+    }
+    
+    //works only after i shutdown the program:((
+    @GetMapping("/load-ontology")
+    public ResponseEntity<List<String>> loadOntology() throws Exception {
+        String protegePath = "C:\\Users\\Doroteea\\Downloads\\Protege-5.5.0-win\\Protege-5.5.0\\Protege.exe";
+        String owlFilePath = "C:\\Users\\Doroteea\\IdeaProjects\\licenta\\onto_generator\\ontology.owl";
+
+        ProcessBuilder pb = new ProcessBuilder(protegePath, owlFilePath);
+        pb.directory(new File("C:\\Users\\Doroteea\\Downloads\\Protege-5.5.0-win\\Protege-5.5.0"));
+        pb.start();
+
+        return ResponseEntity.ok(Collections.singletonList("Ontology loaded successfully"));
     }
 
     private String chatGPT(String text) throws Exception {
@@ -64,7 +106,12 @@ public class ChatGPT {
                 .getJSONObject(0)
                 .getJSONObject("message")
                 .getString("content");
-        System.out.println(ontology);
+
+        FileOutputStream outputStream = new FileOutputStream("ontology.owl");
+        outputStream.write(ontology.getBytes());
+        outputStream.close();
+
         return ontology;
     }
+
 }
