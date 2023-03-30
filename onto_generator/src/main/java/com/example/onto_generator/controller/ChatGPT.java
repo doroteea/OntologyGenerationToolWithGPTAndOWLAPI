@@ -1,5 +1,4 @@
 package com.example.onto_generator.controller;
-//how can i open in protege an owl file from java code?
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
@@ -11,34 +10,15 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.osgi.framework.BundleException;
-import org.protege.editor.core.ProtegeApplication;
-import org.protege.editor.owl.model.OWLModelManager;
-import org.protege.editor.owl.model.OWLWorkspace;
-
-import org.protege.osgi.framework.Launcher;
-import org.semanticweb.owlapi.apibinding.OWLManager;
-import org.semanticweb.owlapi.model.IRI;
-import org.semanticweb.owlapi.model.OWLOntology;
-import org.semanticweb.owlapi.model.OWLOntologyCreationException;
-import org.semanticweb.owlapi.model.OWLOntologyManager;
-import org.semanticweb.owlapi.util.AutoIRIMapper;
-import org.semanticweb.owlapi.util.SimpleIRIMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.ParserConfigurationException;
-import java.awt.*;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 
@@ -60,7 +40,7 @@ public class ChatGPT {
 
         return ResponseEntity.ok(Collections.singletonList("Ontology loaded successfully"));
     }
-    
+
     //works only after i shutdown the program:((
     @GetMapping("/load-ontology")
     public ResponseEntity<List<String>> loadOntology() throws Exception {
