@@ -68,7 +68,7 @@ textarea {
 }
 
 .label2 {
- padding-left: 620px;
+  padding-left: 620px;
 }
 
 input[type="file"] {
@@ -131,5 +131,23 @@ input[type="text"]:focus {
 }
 
 .instructions {
- color: darkred;
+  color: darkred;
+}
+
+#graph-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#cy {
+  border: 1px solid black;
+  width: 60%;
+  height: 400px;
+  margin: 0 auto;
+}
+
+#graph-container h1 {
+  margin-top: 50px;
+  text-align: center;
 }

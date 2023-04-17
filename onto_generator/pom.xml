@@ -47,9 +47,23 @@
             <version>5.5.0</version>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/net.sourceforge.owlapi/owlapi-distribution -->
         <dependency>
             <groupId>net.sourceforge.owlapi</groupId>
             <artifactId>owlapi-distribution</artifactId>
+            <version>5.5.0</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.apache.jena/jena-core -->
+        <dependency>
+            <groupId>org.apache.jena</groupId>
+            <artifactId>jena-core</artifactId>
+            <version>4.7.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.sourceforge.owlapi</groupId>
+            <artifactId>owlapi-apibinding</artifactId>
             <version>5.5.0</version>
         </dependency>
 
@@ -85,8 +99,13 @@
             <version>5.5.0</version>
         </dependency>
 
-
-    </dependencies>
+        <!-- https://mvnrepository.com/artifact/org.apache.jena/jena-arq -->
+        <dependency>
+            <groupId>org.apache.jena</groupId>
+            <artifactId>jena-arq</artifactId>
+            <version>4.7.0</version>
+        </dependency>
+  </dependencies>
 
     <build>
         <plugins>

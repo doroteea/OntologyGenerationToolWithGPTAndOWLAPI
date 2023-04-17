@@ -4,12 +4,12 @@
     <label for="apikey">Insert your Open AI API key:</label>
     <input type="text" id="apikey" placeholder="API Key">
   </div>
-<div class = "instructions">
-  <p> Writing good prompts:</p>
-  <p> 1. When generating ontologies it is good to give clear instructions as in the example: Generate .owl ontology etc ....</p>
-  <p> 1. When updating ontologies it is good to specify the changes desired: Modify the .owl ontology by: adding class etc...</p>
+  <div class = "instructions">
+    <p> Writing good prompts:</p>
+    <p> 1. When generating ontologies it is good to give clear instructions as in the example: Generate .owl ontology etc ....</p>
+    <p> 1. When updating ontologies it is good to specify the changes desired: Modify the .owl ontology by: adding class etc...</p>
 
-</div>
+  </div>
   <div class = "labels">
     <label>Describe your ontology:</label>
     <button class = "button" id="deactivateBtn" (click)="generateFunction(myPrompt.value)">Generate</button>
@@ -35,11 +35,17 @@
   </div>
   <div>
     <p>Load an abstract</p>
-    <input type="file" (change)="onFileSelected($event)" id="fileInput" />
+<!--    <input type="file" (change)="onFileSelected($event)" id="fileInput" />-->
   </div>
   <div id="cy"></div>
-
 </div>
+<!--<ul>-->
+<!--  <li *ngFor="let result of results">-->
+<!--    {{ result.subject.value }} {{ result.predicate.value }} {{ result.object.value }}-->
+<!--  </li>-->
+<!--</ul>-->
+
+
 
 
 
