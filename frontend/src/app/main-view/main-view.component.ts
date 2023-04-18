@@ -14,13 +14,21 @@ import {OntologyService} from "../service/ontologyService";
 import {HttpClient} from "@angular/common/http";
 import {EdgeDefinition, NodeDefinition} from "cytoscape";
 import {Ontology} from "../service/Ontology";
+import PropertyValue = cytoscape.Css.PropertyValue;
+import { Node } from 'src/app/service/Node';
+import { Edge } from 'src/app/service/Edge';
 
-cytoscape.use(dagre);
+interface GraphData {
+  nodes: Node[];
+  edges: Edge[];
+}
+
 @Component({
   selector: 'app-main-view',
   templateUrl: './main-view.component.html',
   styleUrls: ['./main-view.component.css'],
 })
+
 export class MainViewComponent implements OnInit {
   @Input() onto!: string;
   @ViewChild('cy') cy!: ElementRef;
@@ -32,6 +40,7 @@ export class MainViewComponent implements OnInit {
   graph: any;
   private readonly ONTOLOGY_URL = 'http://localhost:8080/ontologyTEST';
   private ontologyUrl = 'http://localhost:8080/ontology';
+  cyst!: any;
 
   constructor(private service: GeneratorService, private ontologyService: OntologyService, private http: HttpClient) {
   }
@@ -68,12 +77,12 @@ export class MainViewComponent implements OnInit {
 
   ontologyFile: any;
 
-  onFileSelected(event: any) {
-    const file = event.target.files[0];
-    if (file) {
-      this.openWebVOWL(file);
-    }
-  }
+  // onFileSelected(event: any) {
+  //   const file = event.target.files[0];
+  //   if (file) {
+  //     this.openWebVOWL(file);
+  //   }
+  // }
 
   // async getGraph() {
   //   const response = await fetch('http://localhost:8080/ontology');
@@ -178,17 +187,17 @@ export class MainViewComponent implements OnInit {
   // }
 
 
-  // onFileSelected(event: any) {
-  //   const file: File = event.target.files[0];
-  //   const reader: FileReader = new FileReader();
-  //   reader.readAsText(file);
-  //   reader.onload = (e) => {
-  //     // @ts-ignore
-  //     this.fileContent = reader.result.toString();
-  //     console.log(this.fileContent.toString());
-  //     this.isFileSelected = true;
-  //   };
-  // }
+  onFileSelected(event: any) {
+    const file: File = event.target.files[0];
+    const reader: FileReader = new FileReader();
+    reader.readAsText(file);
+    reader.onload = (e) => {
+      // @ts-ignore
+      this.fileContent = reader.result.toString();
+      console.log(this.fileContent.toString());
+      this.isFileSelected = true;
+    };
+  }
 
   generateFunction(value: string) {
     const apiKeyInput = document.getElementById('apikey') as HTMLInputElement;
@@ -309,54 +318,142 @@ export class MainViewComponent implements OnInit {
     this.isFileSelected = false;
   }
 
-  async getGraph() {
-    const response = await fetch('http://localhost:8080/ontology');
-    const owlText = await response.text();
-    console.log(owlText);
-    const ontology = new Ontology(owlText);
-    const elements = [
-      ...ontology.getClasses().map((clazz: { id: any; label: any; }) => ({ data: { id: clazz.id, label: clazz.label } })),
-      ...ontology.getObjectProperties().map((prop: { id: any; label: any; source: { id: any; }; target: { id: any; }; }) => ({ data: { id: prop.id, label: prop.label, source: prop.source.id, target: prop.target.id }, classes: 'edge' })),
-    ];
-    console.log(elements);
+  // async getGraph() {
+  //   const response = await fetch('http://localhost:8080/ontology');
+  //   const owlText = await response.text();
+  //   console.log(owlText);
+  //   const ontology = new Ontology(owlText);
+  //   const elements = [
+  //     ...ontology.getClasses().map((clazz: { id: any; label: any; }) => ({ data: { id: clazz.id, label: clazz.label } })),
+  //     ...ontology.getObjectProperties().map((prop: { id: any; label: any; source: { id: any; }; target: { id: any; }; }) => ({ data: { id: prop.id, label: prop.label, source: prop.source.id, target: prop.target.id }, classes: 'edge' })),
+  //   ];
+  //   console.log(elements);
+  //   cytoscape({
+  //     container: document.getElementById('cy'),
+  //     elements,
+  //     style: [
+  //       {
+  //         selector: 'node[label]',
+  //         style: {
+  //           'background-color': '#2e3e50',
+  //           'label': 'data(id)',
+  //           'text-valign': 'center',
+  //           'text-halign': 'center',
+  //           'text-wrap': 'wrap',
+  //           'border-color': '#fff',
+  //           'shape': 'ellipse',
+  //           'text-outline-color': '#000',
+  //           'text-outline-width': '1px',
+  //           'color': '#fff',
+  //           'font-size': '8px',
+  //           'text-opacity': 1,
+  //           'background-opacity': 1,
+  //           'background-image-opacity': 0,
+  //           'z-index': 10,
+  //           'width': function(ele: { data: (arg0: string) => { (): any; new(): any; length: number; }; }) {
+  //             return (ele.data('id').length*6) + 'px';
+  //           },
+  //           'height': function(ele) {
+  //             return (ele.data('id').length*6) + 'px';
+  //           }
+  //         }
+  //
+  //       },
+  //       {
+  //         selector: 'edge',
+  //         style: {
+  //           'color': '#fff',
+  //           'curve-style': 'bezier',
+  //           'target-arrow-shape': 'triangle',
+  //           'line-color': '#7f8c8d',
+  //           'target-arrow-color': '#7f8c8d',
+  //           'label': 'data(label)',
+  //           'font-size': '10px',
+  //           'text-outline-width': 2,
+  //           'text-outline-color': '#7f8c8d',
+  //           'width': 1
+  //         }
+  //       }
+  //     ],
+  //     layout: {
+  //       name: 'dagre'
+  //     }
+  //   });
+  //
+  // }
 
-    cytoscape({
-      container: document.getElementById('cy'),
-      elements,
-      style: [
-        {
-          selector: 'node[label]',
-          style: {
-            'background-color': '#2e3e50',
-            'label': 'data(label)',
-            'text-wrap': 'wrap',
-            'text-valign': 'center',
-            'text-halign': 'center',
-            'font-size': '10px',
-            'width': 'label',
-            'height': 'label',
-            'shape': 'rectangle'
+  getGraph() {
+    this.http.get<GraphData>('http://localhost:8080/graph').subscribe(response => {
+      const nodes = response.nodes.map(node => ({ data: { id: node.id } }));
+      const edges = response.edges.map(edge => ({ data: { id: edge.id, source: edge.source_id, target: edge.target_id } }));
+
+      this.cyst = cytoscape({
+        container: document.getElementById('cy'),
+        style: [
+          {
+            selector: 'node::hover',
+            style:{
+              'background-color': 'cornflowerblue',
+            },
+          },
+          {
+            selector: 'node',
+            style: {
+              'font-weight': 'bold',
+              'background-color': 'lightblue',
+              'label': 'data(id)',
+              'text-halign': 'center',
+              'text-valign': 'center',
+              'font-size' : '12px',
+              'color': 'black',
+              'width': function(ele: { data: (arg0: string) => { (): any; new(): any; length: number; }; }) {
+                return (ele.data('id').length*7) + 'px';
+              },
+              'height': function(ele) {
+                return (ele.data('id').length*7) + 'px';
+              },
+              'shape': 'ellipse',
+            }
+          },
+          {
+            selector: 'edge',
+            style: {
+              'font-weight': 'bold',
+              'font-size':'15px',
+              'curve-style': 'bezier',
+              'target-arrow-shape': 'triangle',
+              'label': 'data(id)',
+              'line-color': 'lightblue',
+              'target-arrow-color': '#ccc',
+              'target-arrow-fill': 'filled'
+            }
           }
-        },
-        {
-          selector: 'edge',
-          style: {
-            'curve-style': 'bezier',
-            'target-arrow-shape': 'triangle',
-            'line-color': '#7f8c8d',
-            'target-arrow-color': '#7f8c8d',
-            'label': 'data(label)',
-            'font-size': '10px',
-            'text-outline-width': 2,
-            'text-outline-color': '#7f8c8d',
-            'width': 1
-          }
+        ],
+        elements: [
+          ...nodes,
+          ...edges
+        ],
+        layout: {
+          name: 'cose'
         }
-      ],
-      layout: {
-        name: 'dagre'
-      }
+      });
     });
 
   }
+
+ focusGraph() {
+    const container = this.cyst.container();
+    const rect = container.getBoundingClientRect();
+    const center = {
+      x: rect.width / 3,
+      y: rect.height / 4,
+    };
+   this.cyst.animate({
+      pan: center,
+      zoom: 1
+    }, {
+      duration: 1000
+    });
+  }
+
 }

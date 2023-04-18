@@ -3,6 +3,8 @@ package com.example.onto_generator.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -21,10 +23,7 @@ import org.apache.jena.riot.RDFFormat;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.semanticweb.owlapi.apibinding.OWLManager;
-import org.semanticweb.owlapi.model.OWLClass;
-import org.semanticweb.owlapi.model.OWLOntology;
-import org.semanticweb.owlapi.model.OWLOntologyCreationException;
-import org.semanticweb.owlapi.model.OWLOntologyManager;
+import org.semanticweb.owlapi.model.*;
 import org.semanticweb.owlapi.reasoner.InferenceType;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import org.semanticweb.owlapi.reasoner.OWLReasonerFactory;
@@ -40,8 +39,12 @@ import org.springframework.web.bind.annotation.*;
 import java.io.*;
 import java.net.http.HttpClient;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 //import javax.ws.rs.Consumes;
 //import javax.ws.rs.POST;
@@ -54,31 +57,6 @@ import java.util.List;
 @Controller
 @CrossOrigin(origins = {"http://localhost:4200"})
 public class ChatGPT {
-
-//    @PostMapping("/generate/graph")
-//    @Consumes(MediaType.APPLICATION_JSON)
-//    @Produces(MediaType.TEXT_PLAIN)
-//    public Response generateGraph(String jsonOntology) throws OWLOntologyCreationException, IOException {
-//        // Parse JSON ontology to OWL ontology
-//        OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
-//        OWLOntology ontology = manager.loadOntologyFromOntologyDocument(jsonOntology);
-//
-//        // Render ontology in RDF/XML format
-//        StringWriter writer = new StringWriter();
-//        XMLWriterPreferences.getInstance().setUseNamespaceEntities(false);
-//        OWLOntologyXMLNamespaceManager nsManager = new OWLOntologyXMLNamespaceManager(ontology, new SimpleShortFormProvider());
-//        RDFXMLDocumentFormat format = new RDFXMLDocumentFormat();
-//        format.setNamespaceManager(nsManager);
-//        manager.saveOntology(ontology, format, writer);
-//
-//        // Convert RDF/XML to Turtle
-//        Model model = ModelFactory.createDefaultModel();
-//        model.read(new ByteArrayInputStream(writer.toString().getBytes()), null, "RDF/XML");
-//        StringWriter turtleWriter = new StringWriter();
-//        model.write(turtleWriter, "TURTLE");
-//
-//        return Response.ok(turtleWriter.toString()).build();
-//    }
 
     @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/generate/{apikey}")
@@ -130,28 +108,6 @@ public class ChatGPT {
         return ontology;
     }
 
-    @GetMapping("/ontologyTEST")
-    public String getOntologyData() throws OWLOntologyCreationException {
-        // Load the OWL file
-        File owlFile = new File("src/main/resources/ontology.owl");
-        OWLOntologyManager ontologyManager = OWLManager.createOWLOntologyManager();
-        OWLOntology ontology = ontologyManager.loadOntologyFromOntologyDocument(owlFile);
-
-        // Create a reasoner to compute the subclass hierarchy
-        OWLReasonerFactory reasonerFactory = new StructuralReasonerFactory();
-        OWLReasoner reasoner = reasonerFactory.createReasoner(ontology);
-        reasoner.precomputeInferences(InferenceType.CLASS_HIERARCHY);
-
-        // Convert the ontology to a JSON object
-        ObjectMapper objectMapper = new ObjectMapper();
-        ObjectNode rootNode = objectMapper.createObjectNode();
-        rootNode.put("name", ontology.getOntologyID().getOntologyIRI().get().toString());
-        ArrayNode childrenNode = rootNode.putArray("children");
-        reasoner.getTopClassNode().getEntities().forEach(cls -> addChildNode(cls.asOWLClass(), childrenNode, reasonerFactory, ontology));
-        // Return the ontology data as a JSON string
-        return rootNode.toString();
-    }
-
     @CrossOrigin(origins = "http://localhost:4200")
     @GetMapping("/ontology")
     public ResponseEntity<ByteArrayResource> getOntology() throws IOException {
@@ -164,15 +120,123 @@ public class ChatGPT {
                 .body(resource);
     }
 
-    private void addChildNode(OWLClass cls, ArrayNode parentNode, OWLReasonerFactory reasonerFactory, OWLOntology ontology) {
-            ObjectMapper objectMapper = new ObjectMapper();
-            ObjectNode childNode = objectMapper.createObjectNode();
-            childNode.put("name", cls.getIRI().toString());
-            ArrayNode grandchildrenNode = childNode.putArray("children");
-            OWLReasoner reasoner = reasonerFactory.createReasoner(ontology);
-            reasoner.getSubClasses(cls, false).entities().forEach(subCls -> addChildNode(subCls.asOWLClass(), grandchildrenNode, reasonerFactory, ontology));
-            parentNode.add(childNode);
+    @CrossOrigin(origins = "http://localhost:4200")
+    @GetMapping("/graph")
+    public ResponseEntity<?> getOntologyGraph() {
+        File file = new File("src/main/resources/ontology.owl");
+        OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
+        OWLOntology ontology;
+
+        List<Node> nodes = new ArrayList<>();
+        List<Edge> edges = new ArrayList<>();
+
+        try {
+            ontology = manager.loadOntologyFromOntologyDocument(file);
+
+            Set<OWLClass> classes;
+
+            classes = ontology.getClassesInSignature();
+
+            for (OWLClass cls : classes) {
+                if (!cls.isOWLNamedIndividual()) {
+                    Node node = new Node();
+                    node.setId(cls.getIRI().getShortForm());
+                    nodes.add(node);
+                }
+
+                for (OWLObjectPropertyDomainAxiom op : ontology.getAxioms(AxiomType.OBJECT_PROPERTY_DOMAIN)) {
+                    if (op.getDomain().equals(cls)) {
+                        for(OWLObjectProperty oop : op.getObjectPropertiesInSignature()){
+                            Edge edge = new Edge();
+                            edge.setId(oop.getIRI().getShortForm());
+                            edge.setSource_id(cls.getIRI().getShortForm());
+
+                            for (OWLObjectPropertyRangeAxiom opra : ontology.getAxioms(AxiomType.OBJECT_PROPERTY_RANGE)) {
+                                if (opra.getProperty().equals(oop)) {
+                                    OWLClassExpression range = opra.getRange();
+                                    if (range.isClassExpressionLiteral()) {
+                                        edge.setTarget_id(range.asOWLClass().getIRI().getShortForm());
+                                    } else {
+                                        for (OWLEntity entity : range.getSignature()) {
+                                            if (entity.isOWLClass()) {
+                                                edge.setTarget_id(entity.asOWLClass().getIRI().getShortForm());
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            edges.add(edge);
+                        }
+                    }
+                }
+            }
+
+            // Create a JSON object with the nodes and edges
+            JsonObject result = new JsonObject();
+            JsonArray nodesArray = new JsonArray();
+            for(Node n : nodes){
+                JsonObject nodeObject = new JsonObject();
+                nodeObject.addProperty("id", n.getId());
+                nodesArray.add(nodeObject);
+            }
+            result.add("nodes", nodesArray);
+
+            JsonArray edgesArray = new JsonArray();
+            for(Edge e: edges){
+                JsonObject edgeObject = new JsonObject();
+                edgeObject.addProperty("id", e.getId());
+                edgeObject.addProperty("source_id", e.getSource_id());
+                edgeObject.addProperty("target_id", e.getTarget_id());
+                edgesArray.add(edgeObject);
+            }
+            result.add("edges", edgesArray);
+
+            // Return the JSON object
+            return ResponseEntity.ok(result.toString());
+
+        } catch (OWLOntologyCreationException ex) {
+            Logger.getLogger("Error parsing the ontology").log(Level.SEVERE, null, ex);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    @CrossOrigin(origins = "http://localhost:4200")
+    @GetMapping("/validate")
+    public ResponseEntity<List<String>> validate() {
+        String filePath = "src/main/resources/ontology.owl";
+        OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
+        OWLOntology ontology;
+        try {
+            ontology = manager.loadOntologyFromOntologyDocument(IRI.create(filePath));
+        } catch (OWLOntologyCreationException e) {
+            System.err.println("Failed to load ontology from file: " + filePath);
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+
+        // Create a structural reasoner to validate the ontology
+        OWLReasonerFactory reasonerFactory = new StructuralReasonerFactory();
+        OWLReasoner reasoner = reasonerFactory.createReasoner(ontology);
+
+        // Check if the ontology is consistent
+        if (!reasoner.isConsistent()) {
+            System.err.println("Ontology is inconsistent!");
+            return ResponseEntity.ok().body(List.of("Ontology is inconsistent!"));
+        }
+
+        // Check if there are any unsatisfiable classes
+        if (reasoner.isSatisfiable(ontology.getOWLOntologyManager().getOWLDataFactory().getOWLNothing())) {
+            System.err.println("There are unsatisfiable classes in the ontology!");
+            List<String> errors = new ArrayList<>();
+            for (OWLClass cls : reasoner.getUnsatisfiableClasses().getEntitiesMinusBottom()) {
+                errors.add(cls.getIRI().toString());
+            }
+            return ResponseEntity.ok().body(errors);
+        }
+
+        // The ontology is valid
+        return ResponseEntity.ok().body(List.of("Ontology is valid!"));
+    }
 
 
 
