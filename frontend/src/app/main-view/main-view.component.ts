@@ -1,4 +1,4 @@
-import {Component, Input, ElementRef, ViewChild, OnInit} from '@angular/core';
+import {Component, Input, ElementRef, ViewChild, OnInit, HostListener} from '@angular/core';
 
 import * as cytoscape from 'cytoscape';
 import * as rdf from 'rdflib';
@@ -50,142 +50,21 @@ export class MainViewComponent implements OnInit {
 
     // const url = 'https://service.tib.eu/webvowl/';
     // window.open(url, '_blank');
-    // this.getGraph();
-    this.getGraph();
   }
 
-// Function to upload the OWL file and submit the form to WebVOWL
-  openWebVOWL(file: File) {
-      const form = document.createElement('form');
-      form.method = 'POST';
-      form.action = 'https://service.tib.eu/webvowl/#file=ontology.owl';
-
-      const formData = new FormData();
-      formData.append('uploadFile', file);
-
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = 'data';
-      input.value = JSON.stringify({ viewMode: 'vowl', ontologyFormat: 'RDF/XML' });
-
-      form.appendChild(input);
-      form.appendChild(document.createElement('br'));
-
-      document.body.appendChild(form);
-      form.submit();
+  @HostListener('window:beforeunload', ['$event'])
+  unloadNotification($event: BeforeUnloadEvent) {
+    if (!this.canReload()) {
+      $event.preventDefault();
+      $event.returnValue = '';
     }
+  }
+
+  canReload(): boolean {
+    return confirm('Are you sure you want to reload the website?');
+  }
 
   ontologyFile: any;
-
-  // onFileSelected(event: any) {
-  //   const file = event.target.files[0];
-  //   if (file) {
-  //     this.openWebVOWL(file);
-  //   }
-  // }
-
-  // async getGraph() {
-  //   const response = await fetch('http://localhost:8080/ontology');
-  //   const owlText = await response.text();
-  //   console.log(owlText);
-  //
-  //   const url = 'http://localhost:3000/webvowl';
-  //   const options = {
-  //     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-  //     responseType: 'text' as const
-  //   };
-  //   const data = new URLSearchParams();
-  //   data.set('ontology', owlText);
-  //
-  //   this.http.get(url+"/#file=ontology.owl").subscribe(response => {
-  //       console.log(response);
-  //       // const graphData = JSON.parse(response);
-  //       // this.displayGraph(graphData);
-  //
-  //   });
-  // }
-  //
-  // displayGraph(graphData: any) {
-  //   const container = document.getElementById('cy');
-  //   this.graph = cytoscape({
-  //     container,
-  //     elements: graphData,
-  //     style: [
-  //       {
-  //         selector: 'node',
-  //         style: {
-  //           'background-color': '#666',
-  //           'label': 'data(name)'
-  //         }
-  //       },
-  //       {
-  //         selector: 'edge',
-  //         style: {
-  //           'curve-style': 'bezier',
-  //           'target-arrow-shape': 'triangle',
-  //           'line-color': '#ccc',
-  //           'target-arrow-color': '#ccc',
-  //           'label': 'data(label)'
-  //         }
-  //       }
-  //     ]
-  //   });
-  // }
-
-  // private loadOntologyTEST(): void {
-  //   this.service.getOntologyTEST()
-  //     .subscribe((elements: cytoscape.ElementDefinition[]) => {
-  //       this.cy.add(elements);
-  //       this.cy.layout({ name: 'dagre' }).run();
-  //     });
-  // }
-  //
-  // private initializeGraph(): void {
-  //   cytoscape.use(cydagre);
-  //   const container = document.getElementById('cy');
-  //   this.cy = cytoscape({
-  //     container,
-  //     style: [
-  //       {
-  //         selector: 'node',
-  //         style: {
-  //           'label': 'data(name)',
-  //           'text-valign': 'center',
-  //           'text-halign': 'center',
-  //           'color': 'white',
-  //           'background-color': 'gray'
-  //         }
-  //       },
-  //       {
-  //         selector: 'edge',
-  //         style: {
-  //           'label': 'data(name)',
-  //           'curve-style': 'bezier',
-  //           'target-arrow-shape': 'triangle',
-  //           'line-color': 'gray',
-  //           'target-arrow-color': 'gray',
-  //           'width': 2
-  //         }
-  //       },
-  //       {
-  //         selector: '.class',
-  //         style: {
-  //           'background-color': 'blue'
-  //         }
-  //       },
-  //       {
-  //         selector: '.subclass',
-  //         style: {
-  //           'line-style': 'dashed'
-  //         }
-  //       }
-  //     ],
-  //     layout: {
-  //       name: 'dagre'
-  //     }
-  //   });
-  // }
-
 
   onFileSelected(event: any) {
     const file: File = event.target.files[0];
@@ -231,29 +110,6 @@ export class MainViewComponent implements OnInit {
       });
     }
   }
-
-  // generateFunction(value: string) {
-  //   if (this.isFileSelected) {
-  //     value += this.fileContent.toString();
-  //   }
-  //   console.log(value);
-  //   const deactivateBtn = document.getElementById(
-  //     'deactivateBtn'
-  //   ) as HTMLButtonElement;
-  //   const myDiv = document.getElementById('myDiv') as HTMLDivElement;
-  //   myDiv.style.opacity = '0.5'; // set the opacity to make it look deactivated
-  //   myDiv.style.pointerEvents = 'none'; // disable pointer events to prevent user interaction
-  //   this.showImage();
-  //
-  //   this.service.generateOntology(value).subscribe((data: any) => {
-  //     console.log(data);
-  //     console.log(data[0]);
-  //     this.onto = data[0];
-  //     myDiv.style.opacity = '1'; // reset the opacity
-  //     myDiv.style.pointerEvents = 'auto'; // enable pointer events
-  //     this.hideImage();
-  //   });
-  // }
 
   deactivate(element: HTMLElement) {
     // Add a disabled attribute to the element
@@ -441,7 +297,11 @@ export class MainViewComponent implements OnInit {
 
   }
 
- focusGraph() {
+  focusGraph() {
+    const cyDiv = document.getElementById("cy") as HTMLDivElement;
+    if (cyDiv) {
+      cyDiv.hidden = false;
+    }
     const container = this.cyst.container();
     const rect = container.getBoundingClientRect();
     const center = {
@@ -456,4 +316,22 @@ export class MainViewComponent implements OnInit {
     });
   }
 
+  validateOntology() {
+    this.service.validateOntology().subscribe((data: any) => {
+      alert(data);
+    });
+  }
+
+  visualize() {
+    const cyDiv = document.getElementById("cy") as HTMLDivElement;
+    if (cyDiv) {
+      cyDiv.hidden = false;
+    }
+    this.getGraph();
+  }
+
+  openai() {
+    const url = 'https://beta.openai.com/signup';
+    window.open(url, '_blank');
+  }
 }

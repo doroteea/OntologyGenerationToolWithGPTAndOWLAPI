@@ -1,30 +1,19 @@
 package com.example.onto_generator.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.riot.RDFFormat;
+import org.apache.jena.reasoner.Reasoner;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.*;
-import org.semanticweb.owlapi.reasoner.InferenceType;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import org.semanticweb.owlapi.reasoner.OWLReasonerFactory;
 import org.semanticweb.owlapi.reasoner.structural.StructuralReasonerFactory;
@@ -36,8 +25,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.*;
-import java.net.http.HttpClient;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -46,13 +36,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-//import javax.ws.rs.Consumes;
-//import javax.ws.rs.POST;
-//import javax.ws.rs.Path;
-//import javax.ws.rs.Produces;
-//import javax.ws.rs.core.MediaType;
-//import javax.ws.rs.core.Response;
-//import java.io.StringWriter;
+
 
 @Controller
 @CrossOrigin(origins = {"http://localhost:4200"})
@@ -134,19 +118,27 @@ public class ChatGPT {
             ontology = manager.loadOntologyFromOntologyDocument(file);
 
             Set<OWLClass> classes;
-
             classes = ontology.getClassesInSignature();
 
             for (OWLClass cls : classes) {
-                if (!cls.isOWLNamedIndividual()) {
-                    Node node = new Node();
-                    node.setId(cls.getIRI().getShortForm());
-                    nodes.add(node);
+                Node node = new Node();
+                node.setId(cls.getIRI().getShortForm());
+                nodes.add(node);
+
+                for (OWLSubClassOfAxiom subclass : ontology.getSubClassAxiomsForSuperClass(cls)) {
+                    OWLClassExpression subclassExpression = subclass.getSubClass();
+                    if (subclassExpression.isOWLClass()) {
+                        Edge edge = new Edge();
+                        edge.setId("hasSubclass");
+                        edge.setSource_id(cls.getIRI().getShortForm());
+                        edge.setTarget_id(subclassExpression.asOWLClass().getIRI().getShortForm());
+                        edges.add(edge);
+                    }
                 }
 
                 for (OWLObjectPropertyDomainAxiom op : ontology.getAxioms(AxiomType.OBJECT_PROPERTY_DOMAIN)) {
                     if (op.getDomain().equals(cls)) {
-                        for(OWLObjectProperty oop : op.getObjectPropertiesInSignature()){
+                        for (OWLObjectProperty oop : op.getObjectPropertiesInSignature()) {
                             Edge edge = new Edge();
                             edge.setId(oop.getIRI().getShortForm());
                             edge.setSource_id(cls.getIRI().getShortForm());
@@ -170,11 +162,19 @@ public class ChatGPT {
                     }
                 }
             }
+        System.out.println("Nodes:");
+            for(Node c: nodes){
+                System.out.println(c.toString());
+            }
+            System.out.println("Edges:");
+            for(Edge e: edges){
+                System.out.println(e.toString());
+            }
 
             // Create a JSON object with the nodes and edges
             JsonObject result = new JsonObject();
             JsonArray nodesArray = new JsonArray();
-            for(Node n : nodes){
+            for (Node n : nodes) {
                 JsonObject nodeObject = new JsonObject();
                 nodeObject.addProperty("id", n.getId());
                 nodesArray.add(nodeObject);
@@ -182,7 +182,7 @@ public class ChatGPT {
             result.add("nodes", nodesArray);
 
             JsonArray edgesArray = new JsonArray();
-            for(Edge e: edges){
+            for (Edge e : edges) {
                 JsonObject edgeObject = new JsonObject();
                 edgeObject.addProperty("id", e.getId());
                 edgeObject.addProperty("source_id", e.getSource_id());
@@ -200,10 +200,12 @@ public class ChatGPT {
         }
     }
 
+
+
     @CrossOrigin(origins = "http://localhost:4200")
     @GetMapping("/validate")
     public ResponseEntity<List<String>> validate() {
-        String filePath = "src/main/resources/ontology.owl";
+        File filePath = new File("src/main/resources/ontology.owl");
         OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
         OWLOntology ontology;
         try {
@@ -237,8 +239,6 @@ public class ChatGPT {
         // The ontology is valid
         return ResponseEntity.ok().body(List.of("Ontology is valid!"));
     }
-
-
 
 
 }

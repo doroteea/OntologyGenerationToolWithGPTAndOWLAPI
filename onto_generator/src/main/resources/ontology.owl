@@ -1,109 +1,23 @@
-<?xml version="1.0"?>
-<rdf:RDF
-xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
-xmlns:owl="http://www.w3.org/2002/07/owl#"
-xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
-xmlns:amd="http://www.semanticweb.org/ontologies/2021/5/AMD#">
+<rdf:RDF xmlns="http://example.com/ontology#"
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+         xmlns:owl="http://www.w3.org/2002/07/owl#">
 
-<!-- Classes -->
+  <owl:Ontology rdf:about="http://example.com/ontology"/>
 
-<owl:Class rdf:ID="AMD">
-  <rdfs:label>Age-related macular degeneration</rdfs:label>
-  <rdfs:comment>The leading cause of irreversible central vision loss in developed countries.</rdfs:comment>
-</owl:Class>
+  <owl:Class rdf:about="#Animal">
+    <rdfs:subClassOf rdf:resource="#LivingThing"/>
+  </owl:Class>
 
-<owl:Class rdf:ID="RiskFactor">
-  <rdfs:label>Risk factor</rdfs:label>
-  <rdfs:comment>Genetic or environmental risk factor for AMD.</rdfs:comment>
-</owl:Class>
+  <owl:Class rdf:about="#LivingThing"/>
 
-<owl:Class rdf:ID="PreventiveStrategy">
-  <rdfs:label>Preventive strategy</rdfs:label>
-  <rdfs:comment>Strategy that can reduce the risk of AMD.</rdfs:comment>
-</owl:Class>
+  <owl:Class rdf:about="#Plant">
+    <rdfs:subClassOf rdf:resource="#LivingThing"/>
+  </owl:Class>
 
-<owl:Class rdf:ID="Supplement">
-  <rdfs:label>Nutritional supplement</rdfs:label>
-  <rdfs:comment>Antioxidant supplement that can reduce the risk of AMD.</rdfs:comment>
-</owl:Class>
-
-<owl:Class rdf:ID="ClinicalStage">
-  <rdfs:label>Clinical stage of AMD</rdfs:label>
-  <rdfs:comment>Unifying criteria for the clinical classification of AMD.</rdfs:comment>
-</owl:Class>
-
-<!-- Properties -->
-
-<owl:ObjectProperty rdf:ID="hasRiskFactor">
-  <rdfs:label>has risk factor</rdfs:label>
-  <rdfs:range rdf:resource="#RiskFactor"/>
-  <rdfs:domain rdf:resource="#AMD"/>
-</owl:ObjectProperty>
-
-<owl:ObjectProperty rdf:ID="hasPreventiveStrategy">
-  <rdfs:label>has preventive strategy</rdfs:label>
-  <rdfs:range rdf:resource="#PreventiveStrategy"/>
-  <rdfs:domain rdf:resource="#AMD"/>
-</owl:ObjectProperty>
-
-<owl:ObjectProperty rdf:ID="hasSupplement">
-  <rdfs:label>has supplement</rdfs:label>
-  <rdfs:range rdf:resource="#Supplement"/>
-  <rdfs:domain rdf:resource="#AMD"/>
-</owl:ObjectProperty>
-
-<owl:ObjectProperty rdf:ID="hasClinicalStage">
-  <rdfs:label>has clinical stage</rdfs:label>
-  <rdfs:range rdf:resource="#ClinicalStage"/>
-  <rdfs:domain rdf:resource="#AMD"/>
-</owl:ObjectProperty>
-
-<!-- Individuals -->
-
-<amd:AMD rdf:ID="AMD_individual">
-  <amd:hasRiskFactor rdf:resource="#GeneticRiskFactor"/>
-  <amd:hasRiskFactor rdf:resource="#EnvironmentalRiskFactor"/>
-  <amd:hasPreventiveStrategy rdf:resource="#QuitSmoking"/>
-  <amd:hasPreventiveStrategy rdf:resource="#HealthyDiet"/>
-  <amd:hasPreventiveStrategy rdf:resource="#ControllingOtherRiskFactors"/>
-  <amd:hasSupplement rdf:resource="#Antioxidants"/>
-  <amd:hasClinicalStage rdf:resource="#EarlyAMD"/>
-  <amd:hasClinicalStage rdf:resource="#IntermediateAMD"/>
-</amd:AMD>
-
-<amd:GeneticRiskFactor rdf:ID="GeneticRiskFactor_individual">
-  <rdfs:label>Genetic risk factor</rdfs:label>
-</amd:GeneticRiskFactor>
-
-<amd:EnvironmentalRiskFactor rdf:ID="EnvironmentalRiskFactor_individual">
-  <rdfs:label>Environmental risk factor</rdfs:label>
-</amd:EnvironmentalRiskFactor>
-
-<amd:QuitSmoking rdf:ID="QuitSmoking_individual">
-  <rdfs:label>Quit smoking</rdfs:label>
-</amd:QuitSmoking>
-
-<amd:HealthyDiet rdf:ID="HealthyDiet_individual">
-  <rdfs:label>Healthy diet</rdfs:label>
-</amd:HealthyDiet>
-
-<amd:ControllingOtherRiskFactors rdf:ID="ControllingOtherRiskFactors_individual">
-  <rdfs:label>Controlling other risk factors</rdfs:label>
-</amd:ControllingOtherRiskFactors>
-
-<amd:Antioxidants rdf:ID="Antioxidants_individual">
-  <rdfs:label>Antioxidant supplement</rdfs:label>
-</amd:Antioxidants>
-
-<amd:EarlyAMD rdf:ID="EarlyAMD_individual">
-  <rdfs:label>Early AMD</rdfs:label>
-  <rdfs:comment>Stage 2 AMD.</rdfs:comment>
-</amd:EarlyAMD>
-
-<amd:IntermediateAMD rdf:ID="IntermediateAMD_individual">
-  <rdfs:label>Intermediate AMD</rdfs:label>
-  <rdfs:comment>Stage 3 AMD.</rdfs:comment>
-</amd:IntermediateAMD>
+  <owl:ObjectProperty rdf:about="#eats">
+    <rdfs:domain rdf:resource="#Animal"/>
+    <rdfs:range rdf:resource="#Plant"/>
+  </owl:ObjectProperty>
 
 </rdf:RDF>

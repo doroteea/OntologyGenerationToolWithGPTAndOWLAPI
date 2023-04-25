@@ -6,7 +6,7 @@ const routes: Routes = [
   {
     path: '',
     redirectTo: 'main-view',
-    pathMatch: 'full'
+    pathMatch: 'full',
   },
   {
     path:'main-view',

@@ -8,6 +8,7 @@ import {Observable} from "rxjs";
 
 export class GeneratorService {
   generateUrl: string = "http://localhost:8080/generate/";
+  validateUrl: string = "http://localhost:8080/validate";
   loadUrl: string = "http://localhost:8080/load-ontology";
   ontologyUrl = "http://localhost:8080/ontologyTEST";
 
@@ -16,6 +17,10 @@ export class GeneratorService {
 
   generateOntology( apikey: string,prompt: string) {
     return this.http.post<Array<String>>(this.generateUrl+apikey, prompt);
+  }
+
+  validateOntology(){
+    return this.http.get<Array<String>>(this.validateUrl);
   }
 
   getOntologyTEST(): Observable<cytoscape.ElementDefinition[]> {

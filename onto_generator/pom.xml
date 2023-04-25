@@ -17,6 +17,10 @@
     <properties>
         <java.version>17</java.version>
     </properties>
+    <repository>
+        <id>dllearner-repo</id>
+        <url>http://dl-learner.org/maven2/releases</url>
+    </repository>
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
