@@ -1,42 +1,25 @@
-Prefix: wine-ont: <http://www.semanticweb.org/wine-ontology#>
-Prefix: rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-Prefix: rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+<?xml version="1.0"?>
+<!DOCTYPE rdf:RDF [
+    <!ENTITY rdf "http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+    <!ENTITY rdfs "http://www.w3.org/2000/01/rdf-schema#">
+    <!ENTITY ex "http://example.org/ontology#">
+]>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+         xmlns:ex="http://example.org/ontology#">
 
-Ontology: <http://www.semanticweb.org/wine-ontology>
+    <rdf:Description rdf:about="http://example.org/ontology#Person">
+        <rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Class"/>
+    </rdf:Description>
 
-# Concepts
-Class: wine-ont:Wine
-    SubClassOf: rdf:Resource
-    EquivalentTo: wine-ont:RedWine or wine-ont:WhiteWine or wine-ont:RoseWine
+    <rdf:Description rdf:about="http://example.org/ontology#John">
+        <rdf:type rdf:resource="http://example.org/ontology#Person"/>
+        <ex:age rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">30</ex:age>
+    </rdf:Description>
 
-Class: wine-ont:RedWine
-    SubClassOf: wine-ont:Wine
+    <rdf:Description rdf:about="http://example.org/ontology#Mary">
+        <rdf:type rdf:resource="http://example.org/ontology#Person"/>
+        <ex:age rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">25</ex:age>
+    </rdf:Description>
 
-Class: wine-ont:WhiteWine
-    SubClassOf: wine-ont:Wine
-
-Class: wine-ont:RoseWine
-    SubClassOf: wine-ont:Wine
-
-# Properties
-ObjectProperty: wine-ont:madeFrom
-    Domain: wine-ont:Wine
-    Range: owl:Thing
-    SubPropertyOf: rdf:type
-
-DataProperty: wine-ont:color
-    Domain: wine-ont:Wine
-    Range: xsd:string
-
-DataProperty: wine-ont:flavor
-    Domain: wine-ont:Wine
-    Range: xsd:string
-
-DataProperty: wine-ont:region
-    Domain: wine-ont:Wine
-    Range: xsd:string
-
-# Individuals
-Individual: wine-ont:Merlot
-    Types: wine-ont:RedWine
-    Facts: wine-ont:flavor "Fruity and soft"; wine-ont:region "Bordeaux, France"; wine-ont:madeFrom wine-ont:Grapes
+</rdf:RDF>

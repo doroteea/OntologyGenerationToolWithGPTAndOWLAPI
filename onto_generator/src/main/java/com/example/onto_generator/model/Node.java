@@ -1,5 +1,4 @@
-package com.example.onto_generator.controller;
-
+package com.example.onto_generator.model;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,8 +8,7 @@ import lombok.RequiredArgsConstructor;
 @AllArgsConstructor
 @RequiredArgsConstructor
 @Data
-public class Edge {
-    private String id;
-    private String source_id;
-    private String target_id;
+public class Node {
+    private String name;
+    private String type; //concept or data_property
 }

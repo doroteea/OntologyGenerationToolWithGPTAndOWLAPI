@@ -68,7 +68,7 @@ textarea {
 }
 
 .label2 {
-  padding-left: 500px;
+  padding-left: 200px;
 }
 
 input[type="file"] {
@@ -162,3 +162,24 @@ input[type="text"]:focus {
 #acc {
   height: 50px;
 }
+
+.load{
+  float: right;
+}
+
+.code {
+  font-size: 14px;
+  font-family: "SF Mono", "Roboto Mono", "Lucida Console", monospace;
+  line-height: 1.5;
+  color: #333;
+  background-color: #f6f8fa;
+  padding: 16px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  border-radius: 4px;
+  border: 1px solid #e1e4e8;
+}
+
+
+

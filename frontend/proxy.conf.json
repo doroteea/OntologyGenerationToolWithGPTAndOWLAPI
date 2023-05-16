@@ -1,7 +1,0 @@
-{
-  "/webvowl/*": {
-    "target": "https://service.tib.eu",
-    "secure": false,
-    "changeOrigin": true
-  }
-}

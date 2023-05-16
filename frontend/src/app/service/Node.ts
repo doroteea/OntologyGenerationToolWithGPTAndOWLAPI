@@ -1,3 +1,4 @@
 export class Node {
-  id: string | undefined;
+  name: string | undefined;
+  type: string | undefined;
 }

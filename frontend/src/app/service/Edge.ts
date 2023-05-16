@@ -1,5 +1,10 @@
 export class Edge {
-  id: string | undefined;
-  source_id: string | undefined;
-  target_id: string | undefined;
+  name: string | undefined;
+  domain: string | undefined;
+  range: string | undefined;
+  type: string | undefined;
 }
+/*    private String name;
+    private String domain;
+    private String range;
+    private String type;*/

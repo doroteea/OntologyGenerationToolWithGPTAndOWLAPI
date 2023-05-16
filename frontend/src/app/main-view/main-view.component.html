@@ -3,7 +3,7 @@
   <div class="input-container">
     <label for="apikey">Insert your Open AI API key:</label>
     <input type="text" id="apikey" placeholder="API Key">
-    <button (click)="openai()" class="button" id = "acc">Create OpenAI Account</button>
+    <button (click)="openai()" class="button" id="acc">Create OpenAI Account</button>
   </div>
   <div class="instructions">
     <p> Writing good prompts:</p>
@@ -18,20 +18,36 @@
     <button class="button" id="deactivateBtn" (click)="generateFunction(myPrompt.value)">Generate</button>
     <button class="button" id="clearBtn" (click)="resetFileInput()">Reset</button>
     <label class="label2">Generated ontology:</label>
-    <button class="button" (click)="loadOntology()">Protege</button>
-    <button class = "button" (click)="validateOntology()" >Validate</button>
+    <!--    <button class="button" (click)="loadOntology()">Protege</button>-->    <button class="button" (click)="validateOntology()">Validate</button>
+    <button (click)="downloadFile()" class="button">Download</button>
+    <label class="label2">Convert to:</label>
+    <select id="dropdown">
+      <option *ngFor="let syntax of ontologyFormatsConverted">{{syntax}}</option>
+    </select>
 
   </div>
   <img src="/assets/images/loading2.gif" alt="load" id="myImg"/>
+  <div class="modify_ontology">
+    <p></p>
+    <button class="button" (click)="class()">class</button>
+    <button class="button" (click)="op()">object property</button>
+    <button class="button" (click)="dp()">data property</button>
+    <button class="button" (click)="individual()">individual </button>
+  </div>
   <div class="grid-container">
+
     <div class="input-box">
       <textarea placeholder="Type your message here..." #myPrompt></textarea>
     </div>
     <div class="output-box" [contentEditable]="true" aria-placeholder="The ontology will be generated here">
- <pre >
-   {{onto}}
- </pre>
+       <pre #pre>
+         {{onto}}
+       </pre>
     </div>
+  </div>
+  <div class = "load">
+  <p>Load existing ontology</p>
+  <input type="file" (change)="onOntologySelected($event)" id="ontologyInput"/>
   </div>
   <div>
     <p>Load an abstract</p>
@@ -42,7 +58,5 @@
     <button (click)="focusGraph()" class="button">Focus Graph</button>
     <div id="cy" hidden></div>
   </div>
-
-
 </div>
 

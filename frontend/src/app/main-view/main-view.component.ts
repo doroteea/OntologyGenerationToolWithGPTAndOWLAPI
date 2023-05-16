@@ -1,27 +1,10 @@
-import {Component, Input, ElementRef, ViewChild, OnInit, HostListener} from '@angular/core';
+import {Component, ElementRef, HostListener, Input, OnInit, ViewChild} from '@angular/core';
 
 import * as cytoscape from 'cytoscape';
-import * as rdf from 'rdflib';
-import * as cydagre from 'cytoscape-dagre';
-import * as vis from 'vis';
-import * as $rdf from 'rdflib';
-// import * as edgehandles from 'cytoscape-edgehandles';
-import * as dagre from 'cytoscape-dagre';
-
 
 import {GeneratorService} from '../service/generatorService';
-import {OntologyService} from "../service/ontologyService";
 import {HttpClient} from "@angular/common/http";
-import {EdgeDefinition, NodeDefinition} from "cytoscape";
-import {Ontology} from "../service/Ontology";
-import PropertyValue = cytoscape.Css.PropertyValue;
-import { Node } from 'src/app/service/Node';
-import { Edge } from 'src/app/service/Edge';
-
-interface GraphData {
-  nodes: Node[];
-  edges: Edge[];
-}
+import { saveAs } from 'file-saver';
 
 @Component({
   selector: 'app-main-view',
@@ -31,40 +14,69 @@ interface GraphData {
 
 export class MainViewComponent implements OnInit {
   @Input() onto!: string;
+  @Input() ontologyFormatsConverted: string[]= ["","OWL", "RDF", "TURTLE","Manchester Syntax","Functional Syntax", "KRSS2"];
   @ViewChild('cy') cy!: ElementRef;
+  @ViewChild('pre') pre!: ElementRef;
 
   selectedFile: File | null = null;
   isFileSelected = false;
   fileContent: string = '';
   base_ontology!: string;
-  graph: any;
-  private readonly ONTOLOGY_URL = 'http://localhost:8080/ontologyTEST';
-  private ontologyUrl = 'http://localhost:8080/ontology';
+  ontologyFile: any;
+
   cyst!: any;
 
-  constructor(private service: GeneratorService, private ontologyService: OntologyService, private http: HttpClient) {
+  constructor(private service: GeneratorService, private http: HttpClient) {
   }
 
   ngOnInit(): void {
     this.isFileSelected = false;
-
-    // const url = 'https://service.tib.eu/webvowl/';
-    // window.open(url, '_blank');
+    this.convert();
   }
 
-  @HostListener('window:beforeunload', ['$event'])
-  unloadNotification($event: BeforeUnloadEvent) {
-    if (!this.canReload()) {
-      $event.preventDefault();
-      $event.returnValue = '';
-    }
+  convert(){
+    const dropdown = document.getElementById("dropdown") as HTMLSelectElement;
+    dropdown.addEventListener("change", (event) => {
+      // @ts-ignore
+      const selectedOption = event.target.value;
+      console.log(selectedOption);
+      this.service.convertOntology(selectedOption, this.onto).subscribe((data: any) => {
+        console.log(data);
+        console.log(data[0]);
+        this.onto = data[0];
+      });
+    });
   }
 
-  canReload(): boolean {
-    return confirm('Are you sure you want to reload the website?');
+  downloadFile() {
+    const text = this.pre.nativeElement.textContent;
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    saveAs(blob, 'ontology.owl');
   }
 
-  ontologyFile: any;
+  // @HostListener('window:beforeunload', ['$event'])
+  // unloadNotification($event: BeforeUnloadEvent) {
+  //   if (!this.canReload()) {
+  //     $event.preventDefault();
+  //     $event.returnValue = '';
+  //   }
+  // }
+  //
+  // canReload(): boolean {
+  //   return confirm('Are you sure you want to reload the website?');
+  // }
+
+  onOntologySelected(event: any) {
+    const file1: File = event.target.files[0];
+    const reader: FileReader = new FileReader();
+    reader.readAsText(file1);
+    reader.onload = (e) => {
+      // @ts-ignore
+      this.fileContent = reader.result.toString();
+      console.log(this.fileContent.toString());
+      this.onto = this.fileContent.toString();
+    };
+  }
 
   onFileSelected(event: any) {
     const file: File = event.target.files[0];
@@ -77,6 +89,51 @@ export class MainViewComponent implements OnInit {
       this.isFileSelected = true;
     };
   }
+  deactivate(element: HTMLElement) {
+    // Add a disabled attribute to the element
+    element.setAttribute('disabled', 'true');
+
+    // Apply a "disabled" class to the element
+    element.classList.add('disabled');
+
+    // Disable any child elements of the given element
+    const childElements = element.querySelectorAll(
+      '*'
+    ) as NodeListOf<HTMLElement>;
+    childElements.forEach((childElement) => {
+      childElement.setAttribute('disabled', 'true');
+      childElement.classList.add('disabled');
+    });
+  }
+
+  activate() {
+    const elements = document.querySelectorAll(
+      'button, input, select, textarea'
+    ) as NodeListOf<HTMLInputElement | HTMLButtonElement | HTMLSelectElement | HTMLTextAreaElement>;
+    for (let i = 0; i < elements.length; i++) {
+      const el = elements[i];
+      el.disabled = false;
+    }
+    const overlay = document.getElementById('overlay');
+    if (overlay) {
+      overlay.style.display = 'none';
+    }
+  }
+
+  showImage(): void {
+    const img = document.getElementById('myImg') as HTMLImageElement;
+    img.style.visibility = 'visible';
+  }
+
+  hideImage(): void {
+    const img = document.getElementById('myImg') as HTMLImageElement;
+    img.style.visibility = 'hidden';
+  }
+
+  openai() {
+  const url = 'https://beta.openai.com/signup';
+  window.open(url, '_blank');
+}
 
   generateFunction(value: string) {
     const apiKeyInput = document.getElementById('apikey') as HTMLInputElement;
@@ -88,7 +145,7 @@ export class MainViewComponent implements OnInit {
       value += this.base_ontology;
       console.log(value);
     }
-    if(apiKeyValue == "" || apiKeyValue == null){
+    if (apiKeyValue == "" || apiKeyValue == null) {
       alert("Insert your api key")
     } else {
       const deactivateBtn = document.getElementById(
@@ -111,62 +168,6 @@ export class MainViewComponent implements OnInit {
     }
   }
 
-  deactivate(element: HTMLElement) {
-    // Add a disabled attribute to the element
-    element.setAttribute('disabled', 'true');
-
-    // Apply a "disabled" class to the element
-    element.classList.add('disabled');
-
-    // Disable any child elements of the given element
-    const childElements = element.querySelectorAll(
-      '*'
-    ) as NodeListOf<HTMLElement>;
-    childElements.forEach((childElement) => {
-      childElement.setAttribute('disabled', 'true');
-      childElement.classList.add('disabled');
-    });
-  }
-
-  activate() {
-    const elements = document.querySelectorAll(
-      'button, input, select, textarea'
-    ) as NodeListOf<
-      HTMLInputElement | HTMLButtonElement | HTMLSelectElement | HTMLTextAreaElement
-      >;
-    for (let i = 0; i < elements.length; i++) {
-      const el = elements[i];
-      el.disabled = false;
-    }
-    const overlay = document.getElementById('overlay');
-    if (overlay) {
-      overlay.style.display = 'none';
-    }
-  }
-
-  showImage(): void {
-    const img = document.getElementById('myImg') as HTMLImageElement;
-    img.style.visibility = 'visible';
-  }
-
-  hideImage(): void {
-    const img = document.getElementById('myImg') as HTMLImageElement;
-    img.style.visibility = 'hidden';
-  }
-
-  loadOntology() {
-    this.service.loadOntology().subscribe(
-      (data: any) => {
-        // handle the response data here
-        console.log(data);
-      },
-      (error: any) => {
-        // handle any errors here
-        console.error(error);
-      }
-    );
-  }
-
   resetFileInput() {
     const fileInput = document.getElementById('fileInput') as HTMLInputElement;
     fileInput.value = '';
@@ -174,99 +175,82 @@ export class MainViewComponent implements OnInit {
     this.isFileSelected = false;
   }
 
-  // async getGraph() {
-  //   const response = await fetch('http://localhost:8080/ontology');
-  //   const owlText = await response.text();
-  //   console.log(owlText);
-  //   const ontology = new Ontology(owlText);
-  //   const elements = [
-  //     ...ontology.getClasses().map((clazz: { id: any; label: any; }) => ({ data: { id: clazz.id, label: clazz.label } })),
-  //     ...ontology.getObjectProperties().map((prop: { id: any; label: any; source: { id: any; }; target: { id: any; }; }) => ({ data: { id: prop.id, label: prop.label, source: prop.source.id, target: prop.target.id }, classes: 'edge' })),
-  //   ];
-  //   console.log(elements);
-  //   cytoscape({
-  //     container: document.getElementById('cy'),
-  //     elements,
-  //     style: [
-  //       {
-  //         selector: 'node[label]',
-  //         style: {
-  //           'background-color': '#2e3e50',
-  //           'label': 'data(id)',
-  //           'text-valign': 'center',
-  //           'text-halign': 'center',
-  //           'text-wrap': 'wrap',
-  //           'border-color': '#fff',
-  //           'shape': 'ellipse',
-  //           'text-outline-color': '#000',
-  //           'text-outline-width': '1px',
-  //           'color': '#fff',
-  //           'font-size': '8px',
-  //           'text-opacity': 1,
-  //           'background-opacity': 1,
-  //           'background-image-opacity': 0,
-  //           'z-index': 10,
-  //           'width': function(ele: { data: (arg0: string) => { (): any; new(): any; length: number; }; }) {
-  //             return (ele.data('id').length*6) + 'px';
-  //           },
-  //           'height': function(ele) {
-  //             return (ele.data('id').length*6) + 'px';
-  //           }
-  //         }
-  //
-  //       },
-  //       {
-  //         selector: 'edge',
-  //         style: {
-  //           'color': '#fff',
-  //           'curve-style': 'bezier',
-  //           'target-arrow-shape': 'triangle',
-  //           'line-color': '#7f8c8d',
-  //           'target-arrow-color': '#7f8c8d',
-  //           'label': 'data(label)',
-  //           'font-size': '10px',
-  //           'text-outline-width': 2,
-  //           'text-outline-color': '#7f8c8d',
-  //           'width': 1
-  //         }
-  //       }
-  //     ],
-  //     layout: {
-  //       name: 'dagre'
-  //     }
-  //   });
-  //
-  // }
+  validateOntology() {
+    const text = this.pre.nativeElement.textContent;
+    this.service.validateOntology(text).subscribe((data: any) => {
+      alert(data);
+    });
+  }
+
+  visualize() {
+    const cyDiv = document.getElementById("cy") as HTMLDivElement;
+    if (cyDiv) {
+      cyDiv.hidden = false;
+    }
+    this.getGraph();
+  }
 
   getGraph() {
-    this.http.get<GraphData>('http://localhost:8080/graph').subscribe(response => {
-      const nodes = response.nodes.map(node => ({ data: { id: node.id } }));
-      const edges = response.edges.map(edge => ({ data: { id: edge.id, source: edge.source_id, target: edge.target_id } }));
-
+    const text = this.pre.nativeElement.textContent;
+    this.service.generateGraph(text).subscribe(response => {
+      const nodes = response.nodes.map(node => ({data: {id: node.name, type: node.type}}));
+      const edges = response.edges.map(edge => ({data: {id: edge.name, source: edge.domain, target: edge.range, type: edge.type}}));
       this.cyst = cytoscape({
         container: document.getElementById('cy'),
         style: [
           {
-            selector: 'node::hover',
-            style:{
-              'background-color': 'cornflowerblue',
-            },
+            selector: 'node[type="individual"]',
+            style: {
+              'font-weight': 'bold',
+              'background-color': 'purple',
+              'label': 'data(id)',
+              'text-halign': 'center',
+              'text-valign': 'center',
+              'font-size': '12px',
+              'color': 'black',
+              'width': function (ele: { data: (arg0: string) => { (): any; new(): any; length: number; }; }) {
+                return (ele.data('id').length * 7) + 'px';
+              },
+              'height': function (ele) {
+                return (ele.data('id').length * 7) + 'px';
+              },
+              'shape': 'star',
+            }
           },
           {
-            selector: 'node',
+            selector: 'node[type="data_property"]',
+            style: {
+              'font-weight': 'bold',
+              'background-color': 'lightgreen',
+              'label': 'data(id)',
+              'text-halign': 'center',
+              'text-valign': 'center',
+              'font-size': '12px',
+              'color': 'black',
+              'width': function (ele: { data: (arg0: string) => { (): any; new(): any; length: number; }; }) {
+                return (ele.data('id').length * 7) + 'px';
+              },
+              'height': function (ele) {
+                return (ele.data('id').length * 7) + 'px';
+              },
+              'shape': 'rectangle',
+            }
+          },
+          {
+            selector: 'node[type="concept"]',
             style: {
               'font-weight': 'bold',
               'background-color': 'lightblue',
               'label': 'data(id)',
               'text-halign': 'center',
               'text-valign': 'center',
-              'font-size' : '12px',
+              'font-size': '12px',
               'color': 'black',
-              'width': function(ele: { data: (arg0: string) => { (): any; new(): any; length: number; }; }) {
-                return (ele.data('id').length*7) + 'px';
+              'width': function (ele: { data: (arg0: string) => { (): any; new(): any; length: number; }; }) {
+                return (ele.data('id').length * 7) + 'px';
               },
-              'height': function(ele) {
-                return (ele.data('id').length*7) + 'px';
+              'height': function (ele) {
+                return (ele.data('id').length * 7) + 'px';
               },
               'shape': 'ellipse',
             }
@@ -275,7 +259,7 @@ export class MainViewComponent implements OnInit {
             selector: 'edge',
             style: {
               'font-weight': 'bold',
-              'font-size':'15px',
+              'font-size': '15px',
               'curve-style': 'bezier',
               'target-arrow-shape': 'triangle',
               'label': 'data(id)',
@@ -297,6 +281,66 @@ export class MainViewComponent implements OnInit {
 
   }
 
+  // getGraph() {
+  //   const text = this.pre.nativeElement.textContent;
+  //   this.service.generateGraph(text).subscribe(response => {
+  //     const nodes = response.nodes.map(node => ({data: {id: node.name}}));
+  //     const edges = response.edges.map(edge => ({data: {id: edge.name, source: edge.domain, target: edge.range}}));
+  //
+  //     this.cyst = cytoscape({
+  //       container: document.getElementById('cy'),
+  //       style: [
+  //         {
+  //           selector: 'node::hover',
+  //           style: {
+  //             'background-color': 'cornflowerblue',
+  //           },
+  //         },
+  //         {
+  //           selector: 'node',
+  //           style: {
+  //             'font-weight': 'bold',
+  //             'background-color': 'lightblue',
+  //             'label': 'data(id)',
+  //             'text-halign': 'center',
+  //             'text-valign': 'center',
+  //             'font-size': '12px',
+  //             'color': 'black',
+  //             'width': function (ele: { data: (arg0: string) => { (): any; new(): any; length: number; }; }) {
+  //               return (ele.data('id').length * 7) + 'px';
+  //             },
+  //             'height': function (ele) {
+  //               return (ele.data('id').length * 7) + 'px';
+  //             },
+  //             'shape': 'ellipse',
+  //           }
+  //         },
+  //         {
+  //           selector: 'edge',
+  //           style: {
+  //             'font-weight': 'bold',
+  //             'font-size': '15px',
+  //             'curve-style': 'bezier',
+  //             'target-arrow-shape': 'triangle',
+  //             'label': 'data(id)',
+  //             'line-color': 'lightblue',
+  //             'target-arrow-color': '#ccc',
+  //             'target-arrow-fill': 'filled'
+  //           }
+  //         }
+  //       ],
+  //       elements: [
+  //         ...nodes,
+  //         ...edges
+  //       ],
+  //       layout: {
+  //         name: 'cose'
+  //       }
+  //     });
+  //   });
+  //
+  // }
+
   focusGraph() {
     const cyDiv = document.getElementById("cy") as HTMLDivElement;
     if (cyDiv) {
@@ -308,7 +352,7 @@ export class MainViewComponent implements OnInit {
       x: rect.width / 3,
       y: rect.height / 4,
     };
-   this.cyst.animate({
+    this.cyst.animate({
       pan: center,
       zoom: 1
     }, {
@@ -316,22 +360,19 @@ export class MainViewComponent implements OnInit {
     });
   }
 
-  validateOntology() {
-    this.service.validateOntology().subscribe((data: any) => {
-      alert(data);
-    });
+  class() {
+
   }
 
-  visualize() {
-    const cyDiv = document.getElementById("cy") as HTMLDivElement;
-    if (cyDiv) {
-      cyDiv.hidden = false;
-    }
-    this.getGraph();
+  op() {
+
   }
 
-  openai() {
-    const url = 'https://beta.openai.com/signup';
-    window.open(url, '_blank');
+  dp() {
+
+  }
+
+  individual() {
+
   }
 }
