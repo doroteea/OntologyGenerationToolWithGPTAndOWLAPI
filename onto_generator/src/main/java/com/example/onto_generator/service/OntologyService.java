@@ -1,5 +1,6 @@
 package com.example.onto_generator.service;
 
+import com.example.onto_generator.model.BaseMetrics;
 import com.example.onto_generator.model.Edge;
 import com.example.onto_generator.model.Node;
 import com.google.gson.JsonArray;
@@ -26,6 +27,8 @@ import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -36,6 +39,78 @@ import java.util.logging.Logger;
 @Service
 @RequiredArgsConstructor
 public class OntologyService {
+
+    public String generateOntology(String apikey, String prompt) throws Exception {
+        System.out.println("here i am :"+prompt);
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        HttpPost httpPost = new HttpPost("https://api.openai.com/v1/completions");
+        httpPost.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+        httpPost.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + apikey);
+
+        JSONObject json = new JSONObject();
+        json.put("model", "text-davinci-003");
+
+        String filePath = "src/main/resources/context";
+        String instructions = new String(Files.readAllBytes(Paths.get(filePath)));
+
+        JSONArray messages = new JSONArray();
+
+        // System message with example instructions
+        JSONObject systemMessage = new JSONObject();
+        systemMessage.put("role", "system");
+        systemMessage.put("content", "As an ontology generator, your task is to analyze abstract texts from scientific papers and generate structured ontologies in the OWL format. You should extract relevant concepts, relationships, and domain-specific knowledge from the abstracts to create comprehensive and accurate ontological representations. Your generated ontologies should capture the key information present in the scientific papers and facilitate knowledge organization and retrieval in scientific domains.");
+        messages.put(systemMessage);
+
+        // User message with example instructions
+        JSONObject userMessage = new JSONObject();
+        userMessage.put("role", "user");
+        userMessage.put("content", instructions);
+        messages.put(userMessage);
+
+        // User message with the abstract prompt
+        JSONObject promptMessage = new JSONObject();
+        promptMessage.put("role", "user");
+        promptMessage.put("content", prompt);
+        messages.put(promptMessage);
+
+        json.put("messages", messages);
+
+        String requestBody = json.toString();
+
+        // Modify the request payload
+        JSONObject modifiedRequestJson = new JSONObject();
+        modifiedRequestJson.put("model", "text-davinci-003");
+        modifiedRequestJson.put("prompt", requestBody);
+
+        String modifiedRequestBody = modifiedRequestJson.toString();
+
+        StringEntity entity = new StringEntity(modifiedRequestBody);
+        httpPost.setEntity(entity);
+
+        // Remaining code remains the same
+        HttpResponse response = httpClient.execute(httpPost);
+        HttpEntity responseEntity = response.getEntity();
+
+        String jsonResponseString = EntityUtils.toString(responseEntity);
+        System.out.println(jsonResponseString);
+        JSONObject jsonResponse = new JSONObject(jsonResponseString);
+
+        JSONArray choices = jsonResponse.getJSONArray("choices");
+        if (choices.length() > 0) {
+            JSONObject choice = choices.getJSONObject(0);
+            String ontology = choice.getString("text");
+            System.out.println(ontology);
+
+            FileOutputStream outputStream = new FileOutputStream("ontology.owl");
+            outputStream.write(ontology.getBytes());
+            outputStream.close();
+
+            return ontology;
+        } else {
+            throw new Exception("No ontology generated.");
+        }
+    }
+
 
     public String chatGPT(String apikey, String text) throws Exception {
         CloseableHttpClient httpClient = HttpClients.createDefault();
@@ -48,6 +123,22 @@ public class OntologyService {
         json.put("model", "gpt-3.5-turbo");
 
         JSONArray messages = new JSONArray();
+
+        JSONObject systemMessage = new JSONObject();
+        systemMessage.put("role", "system");
+        systemMessage.put("content", "As an ontology generator, your task is to analyze abstract texts from scientific papers and generate structured ontologies in the OWL format. You should extract relevant concepts, relationships, and domain-specific knowledge from the abstracts to create comprehensive and accurate ontological representations. Your generated ontologies should capture the key information present in the scientific papers and facilitate knowledge organization and retrieval in scientific domains.");
+        messages.put(systemMessage);
+
+        // User message with example instructions
+        String filePath = "src/main/resources/context";
+        String instructions = new String(Files.readAllBytes(Paths.get(filePath)));
+
+        JSONObject userMessage = new JSONObject();
+        userMessage.put("role", "user");
+        userMessage.put("content", instructions);
+        messages.put(userMessage);
+        json.put("messages", messages);
+
         JSONObject message = new JSONObject();
         message.put("role", "user");
         message.put("content", text);
@@ -93,7 +184,7 @@ public class OntologyService {
         }
     }
 
-    public String getGraph(String onto){
+    public String getGraph(String onto) {
         //File file = new File("src/main/resources/ontology.owl");
         OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
         OWLOntology ontology;
@@ -144,7 +235,7 @@ public class OntologyService {
 
                         // Check if the object property is transitive
                         boolean isTransitive = isObjectPropertyTransitive(op, (Reasoner) reasoner);
-                        edge.setType(isTransitive +" op");
+                        edge.setType(isTransitive + " op");
 
                         // Get the object property range using the reasoner
                         NodeSet<OWLClass> ranges = reasoner.getObjectPropertyRanges(op, true);
@@ -173,7 +264,7 @@ public class OntologyService {
                         List<Node> newNodes = new ArrayList<>();
                         nodes.forEach(node1 -> {
                             if (!range.equals(node1.getName())) {
-                                newNodes.add(new Node(range,"data_property"));
+                                newNodes.add(new Node(range, "data_property"));
                             }
                         });
                         nodes.addAll(newNodes);
@@ -300,4 +391,16 @@ public class OntologyService {
         }
     }
 
+    public BaseMetrics baseMetrics(String onto) throws OWLOntologyCreationException {
+        // Load the ontology from the input string
+        OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
+        InputStream input = new ByteArrayInputStream(onto.getBytes());
+        OWLOntology ontology = manager.loadOntologyFromOntologyDocument(input);
+
+        BaseMetricService metricService = new BaseMetricService(ontology, true);
+
+        metricService.printMetrics();
+
+        return metricService.getMetrics();
+    }
 }

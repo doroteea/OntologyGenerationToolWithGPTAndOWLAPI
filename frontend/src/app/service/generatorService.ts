@@ -4,6 +4,7 @@ import { map } from 'rxjs/operators';
 import {Observable} from "rxjs";
 import {Node} from "./Node";
 import {Edge} from "./Edge";
+import {BaseMetrics} from "./BaseMetrics";
 
 interface GraphData {
   nodes: Node[];
@@ -20,13 +21,12 @@ export class GeneratorService {
   loadUrl: string = "http://localhost:8080/load-ontology";
   graphUrl: string = "http://localhost:8080/graph";
   convertUrl: string = "http://localhost:8080/convert";
+  metricsUrl: string = "http://localhost:8080/metrics";
 
 
 constructor(private http: HttpClient) {}
 
   generateGraph(text: string) {
-    console.log("here");
-    console.log(text);
     return this.http.post<GraphData>(this.graphUrl,text);
   }
 
@@ -44,6 +44,10 @@ constructor(private http: HttpClient) {}
 
   convertOntology(syntax: string, onto:string){
       return this.http.post<Array<String>>(this.convertUrl+"/"+syntax,onto);
+  }
+
+  getBaseMetrics(onto: string) {
+    return this.http.post<BaseMetrics>(this.metricsUrl,onto);
   }
 
 }

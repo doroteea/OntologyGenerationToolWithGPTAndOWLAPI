@@ -5,6 +5,9 @@ import * as cytoscape from 'cytoscape';
 import {GeneratorService} from '../service/generatorService';
 import {HttpClient} from "@angular/common/http";
 import { saveAs } from 'file-saver';
+import Prism from 'prismjs'; // Import Prism.js module
+import {DomSanitizer, SafeHtml} from "@angular/platform-browser";
+import {BaseMetrics} from "../service/BaseMetrics";
 
 @Component({
   selector: 'app-main-view',
@@ -14,7 +17,12 @@ import { saveAs } from 'file-saver';
 
 export class MainViewComponent implements OnInit {
   @Input() onto!: string;
-  @Input() ontologyFormatsConverted: string[]= ["","OWL", "RDF", "TURTLE","Manchester Syntax","Functional Syntax", "KRSS2"];
+  ontologyFormatsConverted: string[]= ["OWL", "RDF", "TURTLE","Manchester Syntax","Functional Syntax", "KRSS2"];
+  baseMetrics!: BaseMetrics;
+
+  num: string = '1';
+  formattedCode: SafeHtml | undefined;
+
   @ViewChild('cy') cy!: ElementRef;
   @ViewChild('pre') pre!: ElementRef;
 
@@ -25,8 +33,9 @@ export class MainViewComponent implements OnInit {
   ontologyFile: any;
 
   cyst!: any;
+  private selectedOption!: string;
 
-  constructor(private service: GeneratorService, private http: HttpClient) {
+  constructor(private service: GeneratorService) {
   }
 
   ngOnInit(): void {
@@ -38,9 +47,9 @@ export class MainViewComponent implements OnInit {
     const dropdown = document.getElementById("dropdown") as HTMLSelectElement;
     dropdown.addEventListener("change", (event) => {
       // @ts-ignore
-      const selectedOption = event.target.value;
-      console.log(selectedOption);
-      this.service.convertOntology(selectedOption, this.onto).subscribe((data: any) => {
+      this.selectedOption = event.target.value;
+      console.log(this.selectedOption);
+      this.service.convertOntology(this.selectedOption, this.onto).subscribe((data: any) => {
         console.log(data);
         console.log(data[0]);
         this.onto = data[0];
@@ -49,9 +58,34 @@ export class MainViewComponent implements OnInit {
   }
 
   downloadFile() {
-    const text = this.pre.nativeElement.textContent;
-    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-    saveAs(blob, 'ontology.owl');
+    if (this.onto) {
+      let fileExtension = '';
+      switch (this.selectedOption) {
+        case 'OWL':
+          fileExtension = 'owl';
+          break;
+        case 'RDF':
+          fileExtension = 'rdf';
+          break;
+        case 'TURTLE':
+          fileExtension = 'ttl';
+          break;
+        case 'Manchester Syntax':
+          fileExtension = 'ms';
+          break;
+        case 'Functional Syntax':
+          fileExtension = 'fs';
+          break;
+        case 'KRSS2':
+          fileExtension = 'krss2';
+          break;
+        default:
+          fileExtension = 'txt';
+          break;
+      }
+      const blob = new Blob([this.onto], {type: 'text/plain;charset=utf-8'});
+      saveAs(blob, 'ontology.'+fileExtension);
+    }
   }
 
   // @HostListener('window:beforeunload', ['$event'])
@@ -89,6 +123,7 @@ export class MainViewComponent implements OnInit {
       this.isFileSelected = true;
     };
   }
+
   deactivate(element: HTMLElement) {
     // Add a disabled attribute to the element
     element.setAttribute('disabled', 'true');
@@ -176,10 +211,11 @@ export class MainViewComponent implements OnInit {
   }
 
   validateOntology() {
-    const text = this.pre.nativeElement.textContent;
-    this.service.validateOntology(text).subscribe((data: any) => {
-      alert(data);
-    });
+    if (this.onto) {
+      this.service.validateOntology(this.onto).subscribe((data: any) => {
+        alert(data);
+      });
+    }
   }
 
   visualize() {
@@ -191,155 +227,102 @@ export class MainViewComponent implements OnInit {
   }
 
   getGraph() {
-    const text = this.pre.nativeElement.textContent;
-    this.service.generateGraph(text).subscribe(response => {
-      const nodes = response.nodes.map(node => ({data: {id: node.name, type: node.type}}));
-      const edges = response.edges.map(edge => ({data: {id: edge.name, source: edge.domain, target: edge.range, type: edge.type}}));
-      this.cyst = cytoscape({
-        container: document.getElementById('cy'),
-        style: [
-          {
-            selector: 'node[type="individual"]',
-            style: {
-              'font-weight': 'bold',
-              'background-color': 'purple',
-              'label': 'data(id)',
-              'text-halign': 'center',
-              'text-valign': 'center',
-              'font-size': '12px',
-              'color': 'black',
-              'width': function (ele: { data: (arg0: string) => { (): any; new(): any; length: number; }; }) {
-                return (ele.data('id').length * 7) + 'px';
-              },
-              'height': function (ele) {
-                return (ele.data('id').length * 7) + 'px';
-              },
-              'shape': 'star',
+      if (this.onto) {
+        this.service.generateGraph(this.onto).subscribe(response => {
+          const nodes = response.nodes.map(node => ({data: {id: node.name, type: node.type}}));
+          const edges = response.edges.map(edge => ({
+            data: {
+              id: edge.name,
+              source: edge.domain,
+              target: edge.range,
+              type: edge.type
             }
-          },
-          {
-            selector: 'node[type="data_property"]',
-            style: {
-              'font-weight': 'bold',
-              'background-color': 'lightgreen',
-              'label': 'data(id)',
-              'text-halign': 'center',
-              'text-valign': 'center',
-              'font-size': '12px',
-              'color': 'black',
-              'width': function (ele: { data: (arg0: string) => { (): any; new(): any; length: number; }; }) {
-                return (ele.data('id').length * 7) + 'px';
+          }));
+          this.cyst = cytoscape({
+            container: document.getElementById('cy'),
+            style: [
+              {
+                selector: 'node[type="individual"]',
+                style: {
+                  'font-weight': 'bold',
+                  'background-color': 'purple',
+                  'label': 'data(id)',
+                  'text-halign': 'center',
+                  'text-valign': 'center',
+                  'font-size': '12px',
+                  'color': 'black',
+                  'width': function (ele: { data: (arg0: string) => { (): any; new(): any; length: number; }; }) {
+                    return (ele.data('id').length * 7) + 'px';
+                  },
+                  'height': function (ele) {
+                    return (ele.data('id').length * 7) + 'px';
+                  },
+                  'shape': 'star',
+                }
               },
-              'height': function (ele) {
-                return (ele.data('id').length * 7) + 'px';
+              {
+                selector: 'node[type="data_property"]',
+                style: {
+                  'font-weight': 'bold',
+                  'background-color': 'lightgreen',
+                  'label': 'data(id)',
+                  'text-halign': 'center',
+                  'text-valign': 'center',
+                  'font-size': '12px',
+                  'color': 'black',
+                  'width': function (ele: { data: (arg0: string) => { (): any; new(): any; length: number; }; }) {
+                    return (ele.data('id').length * 7) + 'px';
+                  },
+                  'height': function (ele) {
+                    return (ele.data('id').length * 7) + 'px';
+                  },
+                  'shape': 'rectangle',
+                }
               },
-              'shape': 'rectangle',
+              {
+                selector: 'node[type="concept"]',
+                style: {
+                  'font-weight': 'bold',
+                  'background-color': 'lightblue',
+                  'label': 'data(id)',
+                  'text-halign': 'center',
+                  'text-valign': 'center',
+                  'font-size': '12px',
+                  'color': 'black',
+                  'width': function (ele: { data: (arg0: string) => { (): any; new(): any; length: number; }; }) {
+                    return (ele.data('id').length * 7) + 'px';
+                  },
+                  'height': function (ele) {
+                    return (ele.data('id').length * 7) + 'px';
+                  },
+                  'shape': 'ellipse',
+                }
+              },
+              {
+                selector: 'edge',
+                style: {
+                  'font-weight': 'bold',
+                  'font-size': '15px',
+                  'curve-style': 'bezier',
+                  'target-arrow-shape': 'triangle',
+                  'label': 'data(id)',
+                  'line-color': 'lightblue',
+                  'target-arrow-color': '#ccc',
+                  'target-arrow-fill': 'filled'
+                }
+              }
+            ],
+            elements: [
+              ...nodes,
+              ...edges
+            ],
+            layout: {
+              name: 'cose'
             }
-          },
-          {
-            selector: 'node[type="concept"]',
-            style: {
-              'font-weight': 'bold',
-              'background-color': 'lightblue',
-              'label': 'data(id)',
-              'text-halign': 'center',
-              'text-valign': 'center',
-              'font-size': '12px',
-              'color': 'black',
-              'width': function (ele: { data: (arg0: string) => { (): any; new(): any; length: number; }; }) {
-                return (ele.data('id').length * 7) + 'px';
-              },
-              'height': function (ele) {
-                return (ele.data('id').length * 7) + 'px';
-              },
-              'shape': 'ellipse',
-            }
-          },
-          {
-            selector: 'edge',
-            style: {
-              'font-weight': 'bold',
-              'font-size': '15px',
-              'curve-style': 'bezier',
-              'target-arrow-shape': 'triangle',
-              'label': 'data(id)',
-              'line-color': 'lightblue',
-              'target-arrow-color': '#ccc',
-              'target-arrow-fill': 'filled'
-            }
-          }
-        ],
-        elements: [
-          ...nodes,
-          ...edges
-        ],
-        layout: {
-          name: 'cose'
-        }
-      });
-    });
-
+          });
+        });
+      }
   }
-
-  // getGraph() {
-  //   const text = this.pre.nativeElement.textContent;
-  //   this.service.generateGraph(text).subscribe(response => {
-  //     const nodes = response.nodes.map(node => ({data: {id: node.name}}));
-  //     const edges = response.edges.map(edge => ({data: {id: edge.name, source: edge.domain, target: edge.range}}));
-  //
-  //     this.cyst = cytoscape({
-  //       container: document.getElementById('cy'),
-  //       style: [
-  //         {
-  //           selector: 'node::hover',
-  //           style: {
-  //             'background-color': 'cornflowerblue',
-  //           },
-  //         },
-  //         {
-  //           selector: 'node',
-  //           style: {
-  //             'font-weight': 'bold',
-  //             'background-color': 'lightblue',
-  //             'label': 'data(id)',
-  //             'text-halign': 'center',
-  //             'text-valign': 'center',
-  //             'font-size': '12px',
-  //             'color': 'black',
-  //             'width': function (ele: { data: (arg0: string) => { (): any; new(): any; length: number; }; }) {
-  //               return (ele.data('id').length * 7) + 'px';
-  //             },
-  //             'height': function (ele) {
-  //               return (ele.data('id').length * 7) + 'px';
-  //             },
-  //             'shape': 'ellipse',
-  //           }
-  //         },
-  //         {
-  //           selector: 'edge',
-  //           style: {
-  //             'font-weight': 'bold',
-  //             'font-size': '15px',
-  //             'curve-style': 'bezier',
-  //             'target-arrow-shape': 'triangle',
-  //             'label': 'data(id)',
-  //             'line-color': 'lightblue',
-  //             'target-arrow-color': '#ccc',
-  //             'target-arrow-fill': 'filled'
-  //           }
-  //         }
-  //       ],
-  //       elements: [
-  //         ...nodes,
-  //         ...edges
-  //       ],
-  //       layout: {
-  //         name: 'cose'
-  //       }
-  //     });
-  //   });
-  //
-  // }
 
   focusGraph() {
     const cyDiv = document.getElementById("cy") as HTMLDivElement;
@@ -375,4 +358,38 @@ export class MainViewComponent implements OnInit {
   individual() {
 
   }
+
+  updateNum(s: string) {
+    switch (s) {
+      case "1":
+        this.num = '1';
+        break;
+      case "2":
+        this.num = '2';
+        break;
+      case "3":
+        this.num = '3';
+        break;
+      case "4":
+        this.num = '4';
+        break;
+      case "5":
+        this.num = '5';
+        break;
+      default:
+        this.num = '1';
+        break;
+    }
+    this.performBaseMetricsRequest();
+  }
+  performBaseMetricsRequest() {
+    if (this.onto) {
+      console.log(this.onto);
+      this.service.getBaseMetrics(this.onto).subscribe(response => {
+        this.baseMetrics = response;
+      });
+    }
+  }
+
+
 }

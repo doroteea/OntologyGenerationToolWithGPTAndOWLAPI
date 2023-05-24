@@ -1,58 +1,121 @@
-.input-box {
-  height: 300px;
+#side_nav {
+  max-width: fit-content;
+  border-radius: 0 10px 10px 0;
+}
+.nav-link{
+  cursor: pointer;
+}
+#Row {
+  display: table;
+  border-spacing: 10px; /*Optional*/
+}
+
+.Column {
+  width: 50%;
+  display: table-cell;
+}
+
+.code-container {
+  position: relative;
+  margin-top: 1rem;
   overflow-x: auto;
-  white-space: nowrap;
-  border: 1px solid #000;
-  border-radius: 5px;
-  padding: 10px;
+  padding: 1rem;
+  background-color: #3e3a33;
+  border: 1px solid #dee2e6;
+  border-radius: 0.25rem;
 }
 
-.title {
-  font-weight: bolder;
-  font-size: 50px;
-  text-align: center;
+.language-owl {
+  background-color: black;
+  font-size: small;
+  font-weight: normal;
+  margin-top: 0;
+  margin-bottom: 0;
+  color: white;
+  overflow:scroll;
+  height: 80vh;
+  border-radius: 20px;
 }
 
-.grid-container {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-gap: 20px;
+.abstract{
+  margin-top: 5vh;
+  overflow:scroll;
+  height: 70vh;
+}
+
+pre, code{
+  white-space: pre;
+  border: 0 !important;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+/* UXCam scheme for google prettify*/
+/*pre .prettyprint { display: block; background-color: #3e3a33;}*/
+/*pre .nocode { background-color: black; color:yellow; }*/
+/*pre .str { color: #fdb839; } !* string *!*/
+/*pre .kwd { color: #fdb839; }*/
+/*pre .com { color: #B3B3B3; } !* comment *!*/
+/*pre .typ { color: #fdb839; } !* type *!*/
+/*pre .lit { color: #cd5c5c; } !* literal *!*/
+/*pre .pun { color: #fff; }    !* punctuation *!*/
+/*pre .pln { color: #fdb839; }    !* plaintext *!*/
+/*pre .tag { color: #fdb839; } !* html/xml tag *!*/
+/*pre .atn { color: #bdb76b; } !* attribute name *!*/
+/*pre .atv { color: #fdb839; } !* attribute value *!*/
+/*pre .dec { color: #fdb839; } !* decimal *!*/
+
+/*--ng-deep @media print  {*/
+/*  pre .str, code .str { color: #060; }*/
+/*  pre .kwd, code .kwd { color: #006; }*/
+/*  pre .com, code .com { color: #600; }*/
+/*  pre .typ, code .typ { color: #404; }*/
+/*  pre .lit, code .lit { color: #044; }*/
+/*  pre .pun, code .pun { color: #440; }*/
+/*  pre .pln, code .pln { color: #000; }*/
+/*  pre .tag, code .tag { color: #006; }*/
+/*  pre .atn, code .atn { color: #404; }*/
+/*  pre .atv, code .atv { color: #060; }*/
+/*}*/
+.query-box {
+  border: 1px solid black;
+  height: 10vh;
+  overflow: scroll;
+}
+
+.result-query-box {
+  border: 1px solid black;
+  height: 70vh;
+  overflow: scroll;
 }
 
 .button {
-  color: black;
-  font-size: 15px;
-  background: lightskyblue;
-  text-align: center;
+  color: white;
+  font-size: 16px;
+  background-color: cornflowerblue;
   text-decoration: none;
-  height: 30px;
-  width: 120px;
-  margin: 20px;
+  height: 4vh;
+  width: 15vh;
+  margin: 2vh;
+  border: none;
   border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
-.button:hover{
-  background: cornflowerblue;
+.button:hover {
+  background-color: dodgerblue;
 }
 
-#element-to-deactivate {
-  color: gray;
-  opacity: 0.5;
-  pointer-events: none;
+#myImg {
+  top: 50%;
+  left: 50%;
+  position: fixed;
+  visibility: hidden;
 }
 
-#element-to-deactivate.deactivated {
-  color: red;
-  opacity: 0.3;
-}
-
-.output-box{
-  height: 300px;
-  overflow-x: auto; /* Enable horizontal scrolling */
-  white-space: nowrap; /* Keep text on a single line */
-  border: 1px solid #000;
-  border-radius: 5px;
-  padding: 10px;
+label {
+  font-size: 18px;
+  margin-right: 10px;
 }
 
 textarea {
@@ -63,12 +126,32 @@ textarea {
   outline: none;
 }
 
-.labels {
-  display: inline-block;
+.language-custom {
+  /* Add your custom styling here */
 }
 
-.label2 {
-  padding-left: 200px;
+
+
+
+
+
+
+
+
+
+
+
+/*old css*/
+
+#element-to-deactivate {
+  color: gray;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+#element-to-deactivate.deactivated {
+  color: red;
+  opacity: 0.3;
 }
 
 input[type="file"] {
@@ -92,28 +175,6 @@ input[type="file"]::-webkit-file-upload-button {
   cursor: pointer;
 }
 
-input[type="file"]::-webkit-file-upload-button:hover {
-  background-color: cornflowerblue;
-}
-
-#myImg {
-  top: 50%;
-  left: 50%;
-  position: fixed;
-  visibility: hidden;
-}
-
-.input-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: 20px;
-}
-
-label {
-  font-size: 18px;
-  margin-right: 10px;
-}
 
 input[type="text"] {
   width: 300px;
@@ -157,10 +218,6 @@ input[type="text"]:focus {
   height: 1000px;
   border-color: black;
   overflow: auto;
-}
-
-#acc {
-  height: 50px;
 }
 
 .load{

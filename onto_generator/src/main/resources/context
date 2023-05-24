@@ -1,0 +1,89 @@
+From this abstract: Age-related macular degeneration (AMD) is the leading cause of irreversible central vision loss in developed countries.
+With the aging of population, AMD will become globally an increasingly important and prevalent disease worldwide.
+It is a complex disease whose etiology is associated with both genetic and environmental risk factors.
+An extensive decline in the quality of life and progressive need of daily living assistance resulting from AMD among those most severely affected highlights the essential role of preventive strategies, particularly advising patients to quit smoking.
+In addition, maintaining a healthy diet, controlling other risk factors (such as hypertension, obesity, and atherosclerosis), and the use of nutritional supplements (antioxidants) are recommendable. Genetic testing may be especially important in patients with a family history of AMD.
+Recently, unifying criteria for the clinical classification of AMD, defining no apparent aging changes; normal aging changes; and early, intermediate, and late AMD stages, are of value in predicting AMD risk of progression and in establishing recommendations for the diagnosis, therapeutic approach, and follow-up of patients.
+The present review is focused on early and intermediate AMD and presents a description of the clinical characteristics and ophthalmological findings for these stages, together with algorithms for the diagnosis and management of patients, which are easily applicable in daily clinical practice
+ a good ontology generated from it would be:
+ <rdf:RDF
+     xmlns="http://example.com/ontology#"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+     xmlns:owl="http://www.w3.org/2002/07/owl#"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
+
+   <owl:Ontology rdf:about="http://example.com/ontology"/>
+
+   <!-- Classes -->
+   <owl:Class rdf:about="http://example.com/ontology#Restaurant">
+     <rdfs:label>Restaurant</rdfs:label>
+   </owl:Class>
+
+   <owl:Class rdf:about="http://example.com/ontology#Menu">
+     <rdfs:label>Menu</rdfs:label>
+   </owl:Class>
+
+   <owl:Class rdf:about="http://example.com/ontology#Dish">
+     <rdfs:label>Dish</rdfs:label>
+   </owl:Class>
+
+   <!-- Object Properties -->
+   <owl:ObjectProperty rdf:about="http://example.com/ontology#hasMenu">
+     <rdfs:label>has menu</rdfs:label>
+     <rdfs:domain rdf:resource="http://example.com/ontology#Restaurant"/>
+     <rdfs:range rdf:resource="http://example.com/ontology#Menu"/>
+   </owl:ObjectProperty>
+
+   <owl:ObjectProperty rdf:about="http://example.com/ontology#hasDish">
+     <rdfs:label>has dish</rdfs:label>
+     <rdfs:domain rdf:resource="http://example.com/ontology#Menu"/>
+     <rdfs:range rdf:resource="http://example.com/ontology#Dish"/>
+   </owl:ObjectProperty>
+
+   <!-- Data Properties -->
+   <owl:DatatypeProperty rdf:about="http://example.com/ontology#name">
+     <rdfs:label>name</rdfs:label>
+     <rdfs:domain rdf:resource="http://example.com/ontology#Restaurant"/>
+     <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+   </owl:DatatypeProperty>
+
+   <owl:DatatypeProperty rdf:about="http://example.com/ontology#description">
+     <rdfs:label>description</rdfs:label>
+     <rdfs:domain rdf:resource="http://example.com/ontology#Restaurant"/>
+     <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+   </owl:DatatypeProperty>
+
+   <owl:DatatypeProperty rdf:about="http://example.com/ontology#price">
+     <rdfs:label>price</rdfs:label>
+     <rdfs:domain rdf:resource="http://example.com/ontology#Dish"/>
+     <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#float"/>
+   </owl:DatatypeProperty>
+
+   <!-- Individuals -->
+   <rdf:Description rdf:about="http://example.com/ontology#restaurant1">
+     <rdf:type rdf:resource="http://example.com/ontology#Restaurant"/>
+     <name>Restaurant 1</name>
+     <description>A cozy restaurant with a diverse menu</description>
+     <hasMenu rdf:resource="http://example.com/ontology#menu1"/>
+   </rdf:Description>
+
+   <rdf:Description rdf:about="http://example.com/ontology#menu1">
+     <rdf:type rdf:resource="http://example.com/ontology#Menu"/>
+     <hasDish rdf:resource="http://example.com/ontology#dish1"/>
+     <hasDish rdf:resource="http://example.com/ontology#dish2"/>
+   </rdf:Description>
+
+   <rdf:Description rdf:about="http://example.com/ontology#dish1">
+     <rdf:type rdf:resource="http://example.com/ontology#Dish"/>
+     <name>Dish 1</name>
+     <price>12.99</price>
+   </rdf:Description>
+
+   <rdf:Description rdf:about="http://example.com/ontology#dish2">
+     <rdf:type rdf:resource="http://example.com/ontology#Dish"/>
+     <name>Dish 2</name>
+     <price>9.99</price>
+   </rdf:Description>
+
+ </rdf:RDF>

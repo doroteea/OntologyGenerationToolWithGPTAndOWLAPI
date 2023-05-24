@@ -42,62 +42,25 @@
         </dependency>
 
         <dependency>
-            <groupId>edu.stanford.protege</groupId>
-            <artifactId>protege-desktop</artifactId>
-            <version>5.5.0</version>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/org.apache.jena/jena-core -->
-        <dependency>
             <groupId>org.apache.jena</groupId>
             <artifactId>jena-core</artifactId>
             <version>4.7.0</version>
         </dependency>
 
         <dependency>
-            <groupId>net.sourceforge.owlapi</groupId>
-            <artifactId>owlapi-apibinding</artifactId>
-            <version>5.5.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>edu.stanford.protege</groupId>
-            <artifactId>protege-editor-owl</artifactId>
-            <version>5.5.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>edu.stanford.protege</groupId>
-            <artifactId>org.protege.editor.owl</artifactId>
-            <version>5.0.0-beta-17</version>
-        </dependency>
-
-        <dependency>
-            <groupId>edu.stanford.protege</groupId>
-            <artifactId>protege-common</artifactId>
-            <version>5.5.0</version>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/edu.stanford.protege/org.protege.editor.core.application -->
-        <dependency>
-            <groupId>edu.stanford.protege</groupId>
-            <artifactId>org.protege.editor.core.application</artifactId>
-            <version>5.0.0-beta-17</version>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/edu.stanford.protege/protege-launcher -->
-        <dependency>
-            <groupId>edu.stanford.protege</groupId>
-            <artifactId>protege-launcher</artifactId>
-            <version>5.5.0</version>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/org.apache.jena/jena-arq -->
-        <dependency>
             <groupId>org.apache.jena</groupId>
             <artifactId>jena-arq</artifactId>
             <version>4.7.0</version>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.apache.jena/apache-jena-libs -->
+        <dependency>
+            <groupId>org.apache.jena</groupId>
+            <artifactId>apache-jena-libs</artifactId>
+            <version>4.8.0</version>
+            <type>pom</type>
+        </dependency>
+
 
         <!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
         <dependency>
@@ -105,6 +68,12 @@
             <artifactId>lombok</artifactId>
             <version>1.18.26</version>
             <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>net.sourceforge.owlapi</groupId>
+            <artifactId>owlapi-apibinding</artifactId>
+            <version>5.5.0</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/net.sourceforge.owlapi/org.semanticweb.hermit -->
@@ -181,14 +150,6 @@
             <groupId>net.sourceforge.owlapi</groupId>
             <artifactId>owlapi-distribution</artifactId>
             <version>5.5.0</version>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/io.dropwizard.metrics/metrics-core -->
-
-        <dependency>
-            <groupId>io.dropwizard.metrics</groupId>
-            <artifactId>metrics-core</artifactId>
-            <version>4.2.18</version>
         </dependency>
 
     </dependencies>

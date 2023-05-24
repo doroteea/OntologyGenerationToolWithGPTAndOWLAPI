@@ -1,149 +1,81 @@
-<?xml version="1.0"?>
-<!DOCTYPE rdf:RDF [
-    <!ENTITY xsd "http://www.w3.org/2001/XMLSchema#">
-    <!ENTITY rdf "http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-    <!ENTITY rdfs "http://www.w3.org/2000/01/rdf-schema#">
-    <!ENTITY owl "http://www.w3.org/2002/07/owl#">
-]>
-<rdf:RDF xmlns="http://www.semanticweb.org/ontologies/wine#"
-    xml:base="http://www.semanticweb.org/ontologies/wine"
+<rdf:RDF
+    xmlns="http://example.com/ontology#"
     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
     xmlns:owl="http://www.w3.org/2002/07/owl#"
     xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
-    
-    <owl:Ontology rdf:about="http://www.semanticweb.org/ontologies/wine"/>
-    
-   <!--Classes-->
-    
-    <!--Wines-->
-    <owl:Class rdf:about="#Wine"/>
-    <owl:Class rdf:about="#RedWine">
-        <rdfs:subClassOf rdf:resource="#Wine"/>
-    </owl:Class>
-    <owl:Class rdf:about="#WhiteWine">
-        <rdfs:subClassOf rdf:resource="#Wine"/>
-    </owl:Class>
-    <owl:Class rdf:about="#RoseWine">
-        <rdfs:subClassOf rdf:resource="#Wine"/>
-    </owl:Class>
-    <owl:Class rdf:about="#SparklingWine">
-        <rdfs:subClassOf rdf:resource="#Wine"/>
-    </owl:Class>
-    
-    <!--Regions-->
-    <owl:Class rdf:about="#Region"/>
-    <owl:Class rdf:about="#Bordeaux">
-        <rdfs:subClassOf rdf:resource="#Region"/>
-    </owl:Class>
-    <owl:Class rdf:about="#Burgundy">
-        <rdfs:subClassOf rdf:resource="#Region"/>
-    </owl:Class>
-    <owl:Class rdf:about="#Champagne">
-        <rdfs:subClassOf rdf:resource="#Region"/>
-    </owl:Class>
-    <owl:Class rdf:about="#NapaValley">
-        <rdfs:subClassOf rdf:resource="#Region"/>
-    </owl:Class>
-    <owl:Class rdf:about="#SonomaCounty">
-        <rdfs:subClassOf rdf:resource="#Region"/>
-    </owl:Class>
-    
-    <!--Grape Varieties-->
-    <owl:Class rdf:about="#GrapeVariety"/>
-    <owl:Class rdf:about="#CabernetSauvignon">
-        <rdfs:subClassOf rdf:resource="#GrapeVariety"/>
-    </owl:Class>
-    <owl:Class rdf:about="#Chardonnay">
-        <rdfs:subClassOf rdf:resource="#GrapeVariety"/>
-    </owl:Class>
-    <owl:Class rdf:about="#Merlot">
-        <rdfs:subClassOf rdf:resource="#GrapeVariety"/>
-    </owl:Class>
-    <owl:Class rdf:about="#PinotNoir">
-        <rdfs:subClassOf rdf:resource="#GrapeVariety"/>
-    </owl:Class>
-    <owl:Class rdf:about="#SauvignonBlanc">
-        <rdfs:subClassOf rdf:resource="#GrapeVariety"/>
-    </owl:Class>
-    <owl:Class rdf:about="#Syrah">
-        <rdfs:subClassOf rdf:resource="#GrapeVariety"/>
-    </owl:Class>
-    
-    <!--Properties-->
-    <owl:ObjectProperty rdf:about="#hasRegion"/>
-    <owl:ObjectProperty rdf:about="#hasGrapeVariety"/>
-    <owl:DatatypeProperty rdf:about="#hasPrice">
-        <rdfs:range rdf:resource="&xsd;double"/>
-    </owl:DatatypeProperty>
-    <owl:DatatypeProperty rdf:about="#hasYear">
-        <rdfs:range rdf:resource="&xsd;int"/>
-    </owl:DatatypeProperty>
-    
-    <!--Individuals-->
-    
-    <!--Red Wines-->
-    <owl:NamedIndividual rdf:about="#ChateauMoutonRothschild">
-        <rdf:type rdf:resource="#RedWine"/>
-        <hasRegion rdf:resource="#Bordeaux"/>
-        <hasGrapeVariety rdf:resource="#CabernetSauvignon"/>
-        <hasPrice>400.00</hasPrice>
-        <hasYear>2015</hasYear>
-    </owl:NamedIndividual>
-    <owl:NamedIndividual rdf:about="#DomaineRomaneeConti">
-        <rdf:type rdf:resource="#RedWine"/>
-        <hasRegion rdf:resource="#Burgundy"/>
-        <hasGrapeVariety rdf:resource="#PinotNoir"/>
-        <hasPrice>10,000.00</hasPrice>
-        <hasYear>2015</hasYear>
-    </owl:NamedIndividual>
-    
-    <!--White Wines-->
-    <owl:NamedIndividual rdf:about="#ScreamingEagle">
-        <rdf:type rdf:resource="#WhiteWine"/>
-        <hasRegion rdf:resource="#NapaValley"/>
-        <hasGrapeVariety rdf:resource="#Chardonnay"/>
-        <hasPrice>300.00</hasPrice>
-        <hasYear>2017</hasYear>
-    </owl:NamedIndividual>
-    <owl:NamedIndividual rdf:about="#ChateauMontelena">
-        <rdf:type rdf:resource="#WhiteWine"/>
-        <hasRegion rdf:resource="#NapaValley"/>
-        <hasGrapeVariety rdf:resource="#Chardonnay"/>
-        <hasPrice>50.00</hasPrice>
-        <hasYear>2015</hasYear>
-    </owl:NamedIndividual>
-    
-    <!--Rose Wines-->
-    <owl:NamedIndividual rdf:about="#WhisperingAngel">
-        <rdf:type rdf:resource="#RoseWine"/>
-        <hasRegion rdf:resource="#Provence"/>
-        <hasGrapeVariety rdf:resource="#Grenache"/>
-        <hasPrice>20.00</hasPrice>
-        <hasYear>2019</hasYear>
-    </owl:NamedIndividual>
-    <owl:NamedIndividual rdf:about="#DomainesOtt">
-        <rdf:type rdf:resource="#RoseWine"/>
-        <hasRegion rdf:resource="#Provence"/>
-        <hasGrapeVariety rdf:resource="#Mourvedre"/>
-        <hasPrice>30.00</hasPrice>
-        <hasYear>2019</hasYear>
-    </owl:NamedIndividual>
-    
-    <!--Sparkling Wines-->
-    <owl:NamedIndividual rdf:about="#Cristal">
-        <rdf:type rdf:resource="#SparklingWine"/>
-        <hasRegion rdf:resource="#Champagne"/>
-        <hasGrapeVariety rdf:resource="#Chardonnay"/>
-        <hasPrice>200.00</hasPrice>
-        <hasYear>2012</hasYear>
-    </owl:NamedIndividual>
-    <owl:NamedIndividual rdf:about="#Taittinger">
-        <rdf:type rdf:resource="#SparklingWine"/>
-        <hasRegion rdf:resource="#Champagne"/>
-        <hasGrapeVariety rdf:resource="#PinotNoir"/>
-        <hasPrice>50.00</hasPrice>
-        <hasYear>NV</hasYear>
-    </owl:NamedIndividual>
-    
+
+  <owl:Ontology rdf:about="http://example.com/ontology"/>
+
+  <!-- Classes -->
+  <owl:Class rdf:about="http://example.com/ontology#Restaurant">
+    <rdfs:label>Restaurant</rdfs:label>
+  </owl:Class>
+
+  <owl:Class rdf:about="http://example.com/ontology#Menu">
+    <rdfs:label>Menu</rdfs:label>
+  </owl:Class>
+
+  <owl:Class rdf:about="http://example.com/ontology#Dish">
+    <rdfs:label>Dish</rdfs:label>
+  </owl:Class>
+
+  <!-- Object Properties -->
+  <owl:ObjectProperty rdf:about="http://example.com/ontology#hasMenu">
+    <rdfs:label>has menu</rdfs:label>
+    <rdfs:domain rdf:resource="http://example.com/ontology#Restaurant"/>
+    <rdfs:range rdf:resource="http://example.com/ontology#Menu"/>
+  </owl:ObjectProperty>
+
+  <owl:ObjectProperty rdf:about="http://example.com/ontology#hasDish">
+    <rdfs:label>has dish</rdfs:label>
+    <rdfs:domain rdf:resource="http://example.com/ontology#Menu"/>
+    <rdfs:range rdf:resource="http://example.com/ontology#Dish"/>
+  </owl:ObjectProperty>
+
+  <!-- Data Properties -->
+  <owl:DatatypeProperty rdf:about="http://example.com/ontology#name">
+    <rdfs:label>name</rdfs:label>
+    <rdfs:domain rdf:resource="http://example.com/ontology#Restaurant"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+
+  <owl:DatatypeProperty rdf:about="http://example.com/ontology#description">
+    <rdfs:label>description</rdfs:label>
+    <rdfs:domain rdf:resource="http://example.com/ontology#Restaurant"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+
+  <owl:DatatypeProperty rdf:about="http://example.com/ontology#price">
+    <rdfs:label>price</rdfs:label>
+    <rdfs:domain rdf:resource="http://example.com/ontology#Dish"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#float"/>
+  </owl:DatatypeProperty>
+
+  <!-- Individuals -->
+  <rdf:Description rdf:about="http://example.com/ontology#restaurant1">
+    <rdf:type rdf:resource="http://example.com/ontology#Restaurant"/>
+    <name>Restaurant 1</name>
+    <description>A cozy restaurant with a diverse menu</description>
+    <hasMenu rdf:resource="http://example.com/ontology#menu1"/>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://example.com/ontology#menu1">
+    <rdf:type rdf:resource="http://example.com/ontology#Menu"/>
+    <hasDish rdf:resource="http://example.com/ontology#dish1"/>
+    <hasDish rdf:resource="http://example.com/ontology#dish2"/>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://example.com/ontology#dish1">
+    <rdf:type rdf:resource="http://example.com/ontology#Dish"/>
+    <name>Dish 1</name>
+    <price>12.99</price>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://example.com/ontology#dish2">
+    <rdf:type rdf:resource="http://example.com/ontology#Dish"/>
+    <name>Dish 2</name>
+    <price>9.99</price>
+  </rdf:Description>
+
 </rdf:RDF>

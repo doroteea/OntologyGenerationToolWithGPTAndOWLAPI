@@ -8,12 +8,6 @@ import {HttpClientModule} from "@angular/common/http";
 import {RouterModule} from "@angular/router";
 import {CommonModule} from "@angular/common";
 import { HighlightModule, HIGHLIGHT_OPTIONS } from 'ngx-highlightjs';
-import hljs from 'highlight.js/lib/core';
-import xml from 'highlight.js/lib/languages/xml';
-import owl from 'highlight.js/lib/languages/xml';
-
-hljs.registerLanguage('xml', xml);
-hljs.registerLanguage('owl', owl);
 
 @NgModule({
   declarations: [
@@ -33,12 +27,10 @@ hljs.registerLanguage('owl', owl);
   providers: [{
     provide: HIGHLIGHT_OPTIONS,
     useValue: {
-      languages: {
-        'owl/xml': () => import('highlight.js/lib/languages/xml'),
-        'rdf/xml': () => import('highlight.js/lib/languages/xml'),
-      }
-    }
-  }],
+      fullLibraryLoader: () => import('highlight.js'),
+    },
+    },
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

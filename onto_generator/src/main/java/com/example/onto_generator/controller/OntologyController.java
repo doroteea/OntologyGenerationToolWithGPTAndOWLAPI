@@ -1,10 +1,7 @@
 package com.example.onto_generator.controller;
 
-import com.example.onto_generator.model.Edge;
-import com.example.onto_generator.model.Node;
+import com.example.onto_generator.model.BaseMetrics;
 import com.example.onto_generator.service.OntologyService;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -21,24 +18,18 @@ import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import org.semanticweb.owlapi.reasoner.OWLReasonerFactory;
 import org.semanticweb.owlapi.reasoner.structural.StructuralReasonerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
-import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Controller
 @CrossOrigin(origins = {"http://localhost:4200"})
@@ -56,7 +47,7 @@ public class OntologyController {
     @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/graph")
     public ResponseEntity<?> getOntologyGraph(@RequestBody String onto) {
-        System.out.println("loaded: "+onto);
+        System.out.println("loaded: " + onto);
         return ResponseEntity.ok(service.getGraph(onto));
     }
 
@@ -68,8 +59,16 @@ public class OntologyController {
 
     @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/convert/{syntax}")
-    public ResponseEntity<List<String>> convert(@PathVariable String syntax,@RequestBody String onto) {
-        return ResponseEntity.ok(Collections.singletonList(service.convertOntology(syntax,onto)));
+    public ResponseEntity<List<String>> convert(@PathVariable String syntax, @RequestBody String onto) {
+        return ResponseEntity.ok(Collections.singletonList(service.convertOntology(syntax, onto)));
+    }
+
+    @CrossOrigin(origins = "http://localhost:4200")
+    @PostMapping("/metrics")
+    public ResponseEntity<BaseMetrics> metrics(@RequestBody String onto) throws OWLOntologyCreationException {
+        System.out.println("here is the controller");
+        System.out.println(onto);
+        return ResponseEntity.ok(service.baseMetrics(onto));
     }
 
 
@@ -117,7 +116,7 @@ public class OntologyController {
         return ontology;
     }
 
-   public void generateGraph(String onto){
+    public void generateGraph(String onto) {
 //        OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
 //        OWLOntology ontology;
 //
@@ -223,9 +222,9 @@ public class OntologyController {
 //            //return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
 //            return "Could not parse ontology";
 //        }
-   }
+    }
 
-    public String validateOntology(String onto){
+    public String validateOntology(String onto) {
         OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
         OWLOntology ontology;
         try {
