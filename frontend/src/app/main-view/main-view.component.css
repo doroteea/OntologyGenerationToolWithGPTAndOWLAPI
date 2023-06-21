@@ -12,70 +12,38 @@
 
 .Column {
   width: 50%;
-  display: table-cell;
+  float: left;
 }
 
-.code-container {
-  position: relative;
-  margin-top: 1rem;
-  overflow-x: auto;
-  padding: 1rem;
-  background-color: #3e3a33;
-  border: 1px solid #dee2e6;
-  border-radius: 0.25rem;
-}
-
-.language-owl {
+.ontology-container {
   background-color: black;
   font-size: small;
   font-weight: normal;
-  margin-top: 0;
+  margin-top: 6vh;
   margin-bottom: 0;
   color: white;
-  overflow:scroll;
-  height: 80vh;
+  width: 90vh;
   border-radius: 20px;
+  height: 50vh;
+  overflow: auto;
 }
 
-.abstract{
-  margin-top: 5vh;
-  overflow:scroll;
-  height: 70vh;
+#cy {
+  border: 3px solid black;
+  border-radius: 10px;
+  height: 80vh;
+  margin: 2vh;
 }
 
-pre, code{
-  white-space: pre;
-  border: 0 !important;
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-}
-/* UXCam scheme for google prettify*/
-/*pre .prettyprint { display: block; background-color: #3e3a33;}*/
-/*pre .nocode { background-color: black; color:yellow; }*/
-/*pre .str { color: #fdb839; } !* string *!*/
-/*pre .kwd { color: #fdb839; }*/
-/*pre .com { color: #B3B3B3; } !* comment *!*/
-/*pre .typ { color: #fdb839; } !* type *!*/
-/*pre .lit { color: #cd5c5c; } !* literal *!*/
-/*pre .pun { color: #fff; }    !* punctuation *!*/
-/*pre .pln { color: #fdb839; }    !* plaintext *!*/
-/*pre .tag { color: #fdb839; } !* html/xml tag *!*/
-/*pre .atn { color: #bdb76b; } !* attribute name *!*/
-/*pre .atv { color: #fdb839; } !* attribute value *!*/
-/*pre .dec { color: #fdb839; } !* decimal *!*/
 
-/*--ng-deep @media print  {*/
-/*  pre .str, code .str { color: #060; }*/
-/*  pre .kwd, code .kwd { color: #006; }*/
-/*  pre .com, code .com { color: #600; }*/
-/*  pre .typ, code .typ { color: #404; }*/
-/*  pre .lit, code .lit { color: #044; }*/
-/*  pre .pun, code .pun { color: #440; }*/
-/*  pre .pln, code .pln { color: #000; }*/
-/*  pre .tag, code .tag { color: #006; }*/
-/*  pre .atn, code .atn { color: #404; }*/
-/*  pre .atv, code .atv { color: #060; }*/
-/*}*/
+.abstract {
+  margin-top: 1vh;
+  height: 50vh;
+  overflow: auto;
+  border: 3px solid black;
+  border-radius: 10px;
+}
+
 .query-box {
   border: 1px solid black;
   height: 10vh;
@@ -91,12 +59,27 @@ pre, code{
 .button {
   color: white;
   font-size: 16px;
-  background-color: cornflowerblue;
+  background-color: #6495ed;
   text-decoration: none;
   height: 4vh;
-  width: 15vh;
+  min-width: 15vh; /* Changed from 'width' to 'min-width' */
   margin: 2vh;
   border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+
+.button_secundar {
+  color: cornflowerblue;
+  font-size: 16px;
+  background-color: white;
+  text-decoration: none;
+  height: 4vh;
+  min-width: 15vh; /* Changed from 'width' to 'min-width' */
+  margin: 2vh;
+  border: 2px solid cornflowerblue;
   border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s ease;
@@ -126,41 +109,17 @@ textarea {
   outline: none;
 }
 
-.language-custom {
-  /* Add your custom styling here */
+.half {
+  width: 50%;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-/*old css*/
-
-#element-to-deactivate {
-  color: gray;
-  opacity: 0.5;
-  pointer-events: none;
-}
-
-#element-to-deactivate.deactivated {
-  color: red;
-  opacity: 0.3;
-}
-
+/*input file*/
 input[type="file"] {
-  border: 1px solid #ccc;
-  padding: 10px;
-  background-color: #f5f5f5;
-  border-radius: 5px;
-  cursor: pointer;
-}
+   border: 1px solid #ccc;
+   padding: 10px;
+   background-color: #f5f5f5;
+   border-radius: 5px;
+   cursor: pointer;
+ }
 
 input[type="file"]:hover {
   background-color: #ddd;
@@ -174,7 +133,6 @@ input[type="file"]::-webkit-file-upload-button {
   border-radius: 5px;
   cursor: pointer;
 }
-
 
 input[type="text"] {
   width: 300px;
@@ -191,8 +149,17 @@ input[type="text"]:focus {
   border-color: green;
 }
 
-.instructions {
-  color: blue;
+/*old css*/
+
+#element-to-deactivate {
+  color: gray;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+#element-to-deactivate.deactivated {
+  color: red;
+  opacity: 0.3;
 }
 
 #graph-container {
@@ -201,41 +168,14 @@ input[type="text"]:focus {
   align-items: center;
 }
 
-#cy {
-  border: 1px solid black;
-  width: 60%;
-  height: 400px;
-  margin: 0 auto;
-}
 
 #graph-container h1 {
   margin-top: 50px;
   text-align: center;
 }
 
-#cy {
-  width: 100%;
-  height: 1000px;
-  border-color: black;
-  overflow: auto;
-}
-
 .load{
   float: right;
-}
-
-.code {
-  font-size: 14px;
-  font-family: "SF Mono", "Roboto Mono", "Lucida Console", monospace;
-  line-height: 1.5;
-  color: #333;
-  background-color: #f6f8fa;
-  padding: 16px;
-  overflow-x: auto;
-  white-space: pre-wrap;
-  word-break: break-all;
-  border-radius: 4px;
-  border: 1px solid #e1e4e8;
 }
 
 

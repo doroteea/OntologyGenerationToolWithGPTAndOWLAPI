@@ -1,6 +1,5 @@
 package com.example.onto_generator.service;
 
-import com.example.onto_generator.model.BaseMetrics;
 import com.example.onto_generator.model.Edge;
 import com.example.onto_generator.model.Node;
 import com.google.gson.JsonArray;
@@ -8,13 +7,16 @@ import com.google.gson.JsonObject;
 import lombok.RequiredArgsConstructor;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.semanticweb.HermiT.Reasoner;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.formats.*;
@@ -22,155 +24,17 @@ import org.semanticweb.owlapi.model.*;
 import org.semanticweb.owlapi.reasoner.NodeSet;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import org.semanticweb.owlapi.reasoner.OWLReasonerFactory;
-import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Service
 @RequiredArgsConstructor
 public class OntologyService {
-
-    public String generateOntology(String apikey, String prompt) throws Exception {
-        System.out.println("here i am :"+prompt);
-        CloseableHttpClient httpClient = HttpClients.createDefault();
-        HttpPost httpPost = new HttpPost("https://api.openai.com/v1/completions");
-        httpPost.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-        httpPost.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + apikey);
-
-        JSONObject json = new JSONObject();
-        json.put("model", "text-davinci-003");
-
-        String filePath = "src/main/resources/context";
-        String instructions = new String(Files.readAllBytes(Paths.get(filePath)));
-
-        JSONArray messages = new JSONArray();
-
-        // System message with example instructions
-        JSONObject systemMessage = new JSONObject();
-        systemMessage.put("role", "system");
-        systemMessage.put("content", "As an ontology generator, your task is to analyze abstract texts from scientific papers and generate structured ontologies in the OWL format. You should extract relevant concepts, relationships, and domain-specific knowledge from the abstracts to create comprehensive and accurate ontological representations. Your generated ontologies should capture the key information present in the scientific papers and facilitate knowledge organization and retrieval in scientific domains.");
-        messages.put(systemMessage);
-
-        // User message with example instructions
-        JSONObject userMessage = new JSONObject();
-        userMessage.put("role", "user");
-        userMessage.put("content", instructions);
-        messages.put(userMessage);
-
-        // User message with the abstract prompt
-        JSONObject promptMessage = new JSONObject();
-        promptMessage.put("role", "user");
-        promptMessage.put("content", prompt);
-        messages.put(promptMessage);
-
-        json.put("messages", messages);
-
-        String requestBody = json.toString();
-
-        // Modify the request payload
-        JSONObject modifiedRequestJson = new JSONObject();
-        modifiedRequestJson.put("model", "text-davinci-003");
-        modifiedRequestJson.put("prompt", requestBody);
-
-        String modifiedRequestBody = modifiedRequestJson.toString();
-
-        StringEntity entity = new StringEntity(modifiedRequestBody);
-        httpPost.setEntity(entity);
-
-        // Remaining code remains the same
-        HttpResponse response = httpClient.execute(httpPost);
-        HttpEntity responseEntity = response.getEntity();
-
-        String jsonResponseString = EntityUtils.toString(responseEntity);
-        System.out.println(jsonResponseString);
-        JSONObject jsonResponse = new JSONObject(jsonResponseString);
-
-        JSONArray choices = jsonResponse.getJSONArray("choices");
-        if (choices.length() > 0) {
-            JSONObject choice = choices.getJSONObject(0);
-            String ontology = choice.getString("text");
-            System.out.println(ontology);
-
-            FileOutputStream outputStream = new FileOutputStream("ontology.owl");
-            outputStream.write(ontology.getBytes());
-            outputStream.close();
-
-            return ontology;
-        } else {
-            throw new Exception("No ontology generated.");
-        }
-    }
-
-
-    public String chatGPT(String apikey, String text) throws Exception {
-        CloseableHttpClient httpClient = HttpClients.createDefault();
-        HttpPost httpPost = new HttpPost("https://api.openai.com/v1/chat/completions");
-
-        httpPost.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-        httpPost.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + apikey);
-
-        JSONObject json = new JSONObject();
-        json.put("model", "gpt-3.5-turbo");
-
-        JSONArray messages = new JSONArray();
-
-        JSONObject systemMessage = new JSONObject();
-        systemMessage.put("role", "system");
-        systemMessage.put("content", "As an ontology generator, your task is to analyze abstract texts from scientific papers and generate structured ontologies in the OWL format. You should extract relevant concepts, relationships, and domain-specific knowledge from the abstracts to create comprehensive and accurate ontological representations. Your generated ontologies should capture the key information present in the scientific papers and facilitate knowledge organization and retrieval in scientific domains.");
-        messages.put(systemMessage);
-
-        // User message with example instructions
-        String filePath = "src/main/resources/context";
-        String instructions = new String(Files.readAllBytes(Paths.get(filePath)));
-
-        JSONObject userMessage = new JSONObject();
-        userMessage.put("role", "user");
-        userMessage.put("content", instructions);
-        messages.put(userMessage);
-        json.put("messages", messages);
-
-        JSONObject message = new JSONObject();
-        message.put("role", "user");
-        message.put("content", text);
-        messages.put(message);
-
-        json.put("messages", messages);
-
-        String requestBody = json.toString();
-
-        StringEntity entity = new StringEntity(requestBody);
-        httpPost.setEntity(entity);
-
-        HttpResponse response = httpClient.execute(httpPost);
-        HttpEntity responseEntity = response.getEntity();
-
-        String jsonResponseString = EntityUtils.toString(responseEntity);
-        System.out.println(jsonResponseString);
-        JSONObject jsonResponse = new JSONObject(jsonResponseString);
-        String ontology = jsonResponse.getJSONArray("choices")
-                .getJSONObject(0)
-                .getJSONObject("message")
-                .getString("content");
-
-
-        System.out.println(ontology);
-
-        FileOutputStream outputStream = new FileOutputStream("ontology.owl");
-        outputStream.write(ontology.getBytes());
-        outputStream.close();
-
-        return ontology;
-    }
 
     private boolean isObjectPropertyTransitive(OWLObjectProperty op, Reasoner reasoner) {
         OWLDataFactory dataFactory = reasoner.getRootOntology().getOWLOntologyManager().getOWLDataFactory();
@@ -391,16 +255,81 @@ public class OntologyService {
         }
     }
 
-    public BaseMetrics baseMetrics(String onto) throws OWLOntologyCreationException {
-        // Load the ontology from the input string
-        OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
-        InputStream input = new ByteArrayInputStream(onto.getBytes());
-        OWLOntology ontology = manager.loadOntologyFromOntologyDocument(input);
+    public String validateOntology(String ontology) {
+        // Set the URL of the SSNValidation service
+        String validationUrl = "http://iot.ee.surrey.ac.uk/SSNValidation/FormInputServlet";
 
-        BaseMetricService metricService = new BaseMetricService(ontology, true);
+        // Create an HTTP client
+        HttpClient httpClient = HttpClients.createDefault();
 
-        metricService.printMetrics();
+        // Create an HTTP POST request with the ontology content as the payload
+        HttpPost httpPost = new HttpPost(validationUrl);
+        httpPost.setEntity(new StringEntity(ontology, ContentType.create("application/rdf+xml")));
 
-        return metricService.getMetrics();
+        // Execute the request and retrieve the response
+        try {
+            HttpResponse response = httpClient.execute(httpPost);
+            HttpEntity responseEntity = response.getEntity();
+
+            // Process the response
+            if (responseEntity != null) {
+                String responseBody = EntityUtils.toString(responseEntity);
+                if (Objects.equals(responseBody, "\n")) {
+                    responseBody = "The ontology is valid";
+                }
+                System.out.println("response: " + responseBody);
+                return responseBody;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return "The ontology is valid!";
+    }
+
+    public String convert(String syntax, String onto) {
+        // Set the URL of the SSNValidation service
+        String conversionUrl = "https://www.ldf.fi/service/owl-converter/";
+
+        HttpClient httpClient = HttpClientBuilder.create().build();
+        HttpPost httpPost = new HttpPost(conversionUrl);
+
+        // Create a list to hold form data key-value pairs
+        List<NameValuePair> formData = new ArrayList<>();
+        formData.add(new BasicNameValuePair("onto", onto));
+        formData.add(new BasicNameValuePair("to", syntax));
+        formData.add(new BasicNameValuePair("force-accept", "text/plain"));
+
+        // Execute the request and retrieve the response
+        try {
+            // Create the form entity with the form data
+            UrlEncodedFormEntity formEntity = new UrlEncodedFormEntity(formData);
+
+            // Set the form entity as the request entity
+            httpPost.setEntity(formEntity);
+
+            // Set the ontology content as the payload
+            httpPost.setHeader("Content-Type", "application/x-www-form-urlencoded");
+
+            // Execute the POST request
+            HttpResponse response = httpClient.execute(httpPost);
+
+            int statusCode = response.getStatusLine().getStatusCode();
+            System.out.println("Response Code: " + statusCode);
+
+            HttpEntity responseEntity = response.getEntity();
+
+            // Process the response
+            if (responseEntity != null) {
+                String responseBody = EntityUtils.toString(responseEntity);
+                if (Objects.equals(responseBody, "\n")) {
+                    responseBody = "The ontology is valid";
+                }
+                System.out.println("response: " + responseBody);
+                return responseBody;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return "The ontology is valid!";
     }
 }

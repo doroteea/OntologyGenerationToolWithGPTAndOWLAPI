@@ -1,0 +1,64 @@
+Your task is to extract RDF triples from a provided text in a context.
+These RDF triples will be used to construct an ontology, a web of interconnected concepts, classes, and instances. You should pay attention to details in the text and aim to capture the nuances, using specific terms for classes and individuals, creating a diverse set of properties to establish meaningful relationships among individuals. Your goal is to model the effects, causes, and associations derived from the text in detail.
+
+You will extract RDF triples following this format:
+
+For any concepts identified, create a triple as follows: [CONCEPT, "rdf:type", "owl:Class"]. If a concept is general, discern a suitable superclass to better illustrate the context.
+
+If the concepts identified is a subclass of another concept, create a triple as follows: [CONCEPT, "rdfs:subClassOf", SUPER_CONCEPT].
+
+For the identified instance that refers to a single, specific item within a CONCEPT, create a triple as follows: [INDIVIDUAL, "rdf:type", CONCEPT].
+
+For relationships between individuals, which should be defined on their concepts, create triples as follows: [RELATIONSHIP, "rdf:type", "owl:ObjectProperty"], [RELATIONSHIP, "rdfs:domain", DOMAIN_CONCEPT], [RELATIONSHIP, "rdfs:range", RANGE_CONCEPT].
+
+For attribute assignments to individuals (pay attentions to numbers, dates, and measurement units in general), deliver triples as: [ATTRIBUTE, "rdf:type", "owl:DatatypeProperty"], [ATTRIBUTE, "rdfs:domain", DOMAIN_CONCEPT], [ATTRIBUTE, "rdfs:range", xsd:DATA_TYPE]. Data types include: string, integer, date, time, boolean, etc.
+
+For any supplementary descriptions providing minor information about any elements, format them as a triple: [ELEMENT, "rdfs:comment", COMMENT].
+
+Individual assertions should be given in the format of [INDIVIDUAL, RELATIONSHIP, INDIVIDUAL] in cases of relationships, and for attribute assignments, use [INDIVIDUAL, ATTRIBUTE, VALUE].
+
+The sequence of triples should be ordered like: classes, subclasses, object properties, data properties, and then individual assertions. The last triple should not have a comma after it. All triples should make sense within the general context and build upon each other to form a detailed ontology of the subject matter.
+
+If an update is related to deleting an entity, provide ["DELETE", ENTITY].
+
+Note: The last triplet should not have a comma.
+
+Example:
+prompt: Alice is a software engineer working at XYZ Corp, a technology company specializing in AI. She is skilled in Python programming. Bob is her manager who is known for his leadership skills.Alice is 30 years old and she loves playing the violin, an instrument she has been playing since childhood. Bob is over 45 years old.
+updates:
+[
+["Person", "rdf:type", "owl:Class"],
+["City", "rdf:type", "owl:Class"],
+["Occupation", "rdf:type", "owl:Class"],
+["Company", "rdf:type", "owl:Class"],
+["Alice", "rdf:type", "Person"],
+["Bob", "rdf:type", "Person"],
+["New_York_City", "rdf:type", "City"],
+["Software_Developer", "rdf:type", "Occupation"],
+["Data_Scientist", "rdf:type", "Occupation"],
+["Google", "rdf:type", "Company"],
+["IBM", "rdf:type", "Company"],
+["livesIn", "rdf:type", "owl:ObjectProperty"],
+["livesIn", "rdfs:domain", "Person"],
+["livesIn", "rdfs:range", "City"],
+["hasOccupation", "rdf:type", "owl:ObjectProperty"],
+["hasOccupation", "rdfs:domain", "Person"],
+["hasOccupation", "rdfs:range", "Occupation"],
+["worksAt", "rdf:type", "owl:ObjectProperty"],
+["worksAt", "rdfs:domain", "Person"],
+["worksAt", "rdfs:range", "Company"],
+["isRoommateOf", "rdf:type", "owl:ObjectProperty"],
+["isRoommateOf", "rdfs:domain", "Person"],
+["isRoommateOf", "rdfs:range", "Person"],
+["Alice", "isRoommateOf", "Bob"],
+["Alice", "livesIn", "New_York_City"],
+["Alice", "hasOccupation", "Software_Developer"],
+["Alice", "worksAt", "Google"],
+["Bob", "isRoommateOf", "Alice"],
+["Bob", "livesIn", "New_York_City"],
+["Bob", "hasOccupation", "Data_Scientist"],
+["Bob", "worksAt", "IBM"]
+]
+
+prompt: $prompt
+updates:

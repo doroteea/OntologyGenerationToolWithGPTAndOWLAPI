@@ -1,7 +1,6 @@
-package com.example.onto_generator.service;
+package com.example.onto_generator.service.metrics;
 
 import com.example.onto_generator.model.BaseMetrics;
-import com.example.onto_generator.test.OntologyUtility;
 import lombok.RequiredArgsConstructor;
 import org.semanticweb.owlapi.metrics.AxiomCount;
 import org.semanticweb.owlapi.metrics.DLExpressivity;
@@ -112,11 +111,11 @@ public class BaseMetricService {
         metrics.setActualImports(allActualImports);
     }
 
-    public BaseMetrics getMetrics() {
+    public BaseMetrics getBaseMetrics() {
         return metrics;
     }
 
-    public void printMetrics() {
+    public void printBaseMetrics() {
         System.out.println("Base Metrics:");
         System.out.println("Axioms: " + metrics.getAxioms());
         System.out.println("Logical Axioms Count: " + metrics.getLogicalAxiomsCount());

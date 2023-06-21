@@ -15,7 +15,7 @@
 <body>
 <div class="container-fluid">
   <div class="row flex-nowrap">
-    <div class="col-auto col-md-3 col-xl-2 px-sm-2 px-0 bg-dark" id="side_nav">
+    <div class="half col-auto col-md-3 col-xl-2 px-sm-2 px-0 bg-dark" id="side_nav">
       <div class="d-flex flex-column align-items-center align-items-sm-start px-3 pt-2 text-white min-vh-100" id="side">
         <p href="/" class="d-flex align-items-center pb-3 mb-md-0 me-md-auto text-white text-decoration-none">
           <span class="fs-5 d-none d-sm-inline">Menu</span>
@@ -23,17 +23,17 @@
         <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start" id="menu">
           <li class="nav-item">
             <p  class="nav-link align-middle px-0">
-              <i class="fs-4 bi-house"></i> <span class="ms-1 d-none d-sm-inline" (click)="updateNum('1')">Generate</span>
+              <i class="fs-4 bi-house"></i> <span class="ms-1 d-none d-sm-inline" (click)="updateNum('1');">Generate</span>
             </p>
           </li>
           <li class="nav-item">
             <p class="nav-link align-middle px-0">
-              <i class="fs-4 bi-house"></i> <span class="ms-1 d-none d-sm-inline" (click)="updateNum('2')">Graph</span>
+              <i class="fs-4 bi-house"></i> <span class="ms-1 d-none d-sm-inline" (click)="updateNum('2')">Ontology</span>
             </p>
           </li>
           <li>
             <p class="nav-link px-0 align-middle">
-              <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline" (click)="updateNum('3')">Enhance</span></p>
+              <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline" (click)="updateNum('3')">Convert</span></p>
           </li>
           <li>
             <p class="nav-link px-0 align-middle">
@@ -41,71 +41,42 @@
           </li>
           <li>
             <p class="nav-link px-0 align-middle">
-              <i class="fs-4 bi-people"></i> <span class="ms-1 d-none d-sm-inline" (click)="updateNum('5')">Sparql</span>
+              <i class="fs-4 bi-people"></i> <span class="ms-1 d-none d-sm-inline" (click)="updateNum('5')">Validator</span>
             </p>
           </li>
         </ul>
         <hr>
       </div>
     </div>
-    <div class="col py-3" id="Row">
+    <div class="half col py-3" id="Row">
       <div class="Column">
         <div [ngSwitch]="num">
           <div *ngSwitchCase="'1'">
             <h1>
-            Generate OWL Ontology
+              Generate OWL Ontology
             </h1>
-                <label for="apikey">Insert your Open AI API key</label>
-                <input type="text" id="apikey" placeholder="API Key">
-                <label>You don't have an Open API key? Create an account</label>
-                <button (click)="openai()" class="button">OpenAI</button>
-                <div>
-                  <label>Load an abstract</label>
-                  <input type="file" (change)="onFileSelected($event)" id="fileInput"/>
-                  <button class="button" id="deactivateBtn" (click)="generateFunction(myPrompt.value)">Generate</button>
-                </div>
-
-                <textarea placeholder="Type your message here..." #myPrompt></textarea>
-                <div class = "abstract" [contentEditable]="true">
-                  {{fileContent.toString()}}
-                </div>
+            <label for="apikey">Insert your Open AI API key here:</label>
+            <input type="text" id="apikey" placeholder="API Key">
+            <label>You don't have an Open API key? Create an account:</label>
+            <button (click)="openai()" class="button_secundar">OpenAI</button>
+            <div>
+              <button class="button" id="deactivateBtn" (click)="generateFunction()">Generate</button>
+              <button class="button_secundar" id="clearBtn" (click)="clearGraph()">Clear</button>
+            </div>
+            <textarea class="abstract" [contentEditable]="true" placeholder="Describe your ontology here...">{{fileContent.toString()}}</textarea>
+            <label>Load an abstract</label>
+            <input type="file" (change)="onFileSelected($event)" id="fileInput"/>
           </div>
           <div *ngSwitchCase="'2'">
-            <h1>
-              Knowledge Graph of the Ontology
-            </h1>
-            <div id="network">
-                  <button (click)="visualize()" class="button">View Graph</button>
-                  <button (click)="focusGraph()" class="button">Focus Graph</button>
-                  <div id="cy" hidden></div>
-            </div>
           </div>
           <div *ngSwitchCase="'3'">
-          <h1>
-            Enhance Ontology
-          </h1>
-            <div class = "category">
-              <h2>Classes</h2>
-              <label>Class:</label>
-              <input id="class_name" placeholder="Class Name"/><button>+</button><button>-</button>
-            </div>
-            <div class = "category">
-              <h2>Object Properties</h2>
-              <div><label>Object Property:</label><input placeholder="Object Property Name"/></div>
-              <div><label>Domain:</label><input placeholder="Class Name"/></div>
-              <div><label>Range:</label><input placeholder="Class Name"/></div>
-            </div>
-            <div class = "category">
-              <h2>Data Properties</h2>
-              <div><label>Data Property:</label><input placeholder="Data Property Name"/></div>
-              <div><label>Domain:</label><input placeholder="Class Name"/></div>
-              <div><label>Range:</label><input placeholder="Class Name"/></div>
-            </div>
-            <div class = "category">
-              <h2>Individuals</h2>
-              <label>Individual:</label><input placeholder="Individual Name"/>
-              <label>of Class:</label><input placeholder="Class Name"/>
-            </div>
+            <h1>
+              Convert Ontology Syntax
+            </h1>
+            <select id="dropdown">
+              <option *ngFor="let syntax of ontologyFormatsConverted">{{syntax}}</option>
+            </select>
+            <pre class="prettyprint linenums ontology-container" [contentEditable]="true"><code>{{converted}}</code></pre>
           </div>
           <div *ngSwitchCase="'4'">
             <h1>Metrics on Ontology</h1>
@@ -124,31 +95,83 @@
               <p>Actual Imports: {{baseMetrics.actualImports}}</p>
             </div>
             <h3>Class Axioms</h3>
-            <h3>Object property Axioms</h3>
-            <h3>Data property Axioms</h3>
+            <div class="base_metric">
+              <p>SubClassOfAxiomsMetric: {{classMetrics.SubClassOfAxiomsMetric}}</p>
+              <p>EquivalentClassesAxiomsMetric: {{classMetrics.EquivalentClassesAxiomsMetric}}</p>
+              <p>DisjointClassesAxiomsMetric: {{classMetrics.DisjointClassesAxiomsMetric}}</p>
+              <p>GCIMetric: {{classMetrics.GCIMetric}}</p>
+              <p>HiddenGCIMetric: {{classMetrics.HiddenGCIMetric}}</p>
+            </div>
+            <h3>Object Property Axioms</h3>
+            <div class="base_metric">
+              <p>SubObjectPropertyAxioms: {{objectMetrics.subObjectPropertyAxioms}}</p>
+              <p>EquivalentObjectPropertyAxioms: {{objectMetrics.equivalentObjectPropertyAxioms}}</p>
+              <p>InverseObjectPropertyAxiomsMetric: {{objectMetrics.inverseObjectPropertyAxiomsMetric}}</p>
+              <p>DisjointObjectPropertyAxiomsMetric: {{objectMetrics.disjointObjectPropertyAxiomsMetric}}</p>
+              <p>FunctionalObjectPropertyAxiomsMetric: {{objectMetrics.functionalObjectPropertyAxiomsMetric}}</p>
+              <p>InverseFunctionalObjectPropertiesAxiomsMetric: {{objectMetrics.inverseFunctionalObjectPropertiesAxiomsMetric}}</p>
+              <p>TransitiveObjectPropertyAxiomsMetric: {{objectMetrics.transitiveObjectPropertyAxiomsMetric}}</p>
+              <p>SymmetricObjectPropertyAxiomsMetric: {{objectMetrics.symmetricObjectPropertyAxiomsMetric}}</p>
+              <p>AsymmetricObjectPropertyAxiomsMetric: {{objectMetrics.asymmetricObjectPropertyAxiomsMetric}}</p>
+              <p>ReflexiveObjectPropertyAxiomsMetric: {{objectMetrics.reflexiveObjectPropertyAxiomsMetric}}</p>
+              <p>IrreflexiveObjectPropertyAxiomsMetric: {{objectMetrics.irreflexiveObjectPropertyAxiomsMetric}}</p>
+              <p>ObjectPropertyDomainAxiomsMetric: {{objectMetrics.objectPropertyDomainAxiomsMetric}}</p>
+              <p>ObjectPropertyRangeAxiomsMetric: {{objectMetrics.objectPropertyRangeAxiomsMetric}}</p>
+              <p>SubPropertyChainOfAxiomsMetric: {{objectMetrics.subPropertyChainOfAxiomsMetric}}</p>
+            </div>
+            <h3>Data Property Axioms</h3>
+            <div class="base_metric">
+              <p>SubDataPropertyOfAxiomsMetric: {{dataMetrics.SubDataPropertyOfAxiomsMetric}}</p>
+              <p>EquivalentDataPropertyAxiomsMetric: {{dataMetrics.EquivalentDataPropertyAxiomsMetric}}</p>
+              <p>DisjointDataPropertyAxiomsMetric: {{dataMetrics.DisjointDataPropertyAxiomsMetric}}</p>
+              <p>FunctionalDataPropertyAxiomsMetric: {{dataMetrics.FunctionalDataPropertyAxiomsMetric}}</p>
+              <p>DataPropertyDomainAxiomsMetric: {{dataMetrics.DataPropertyDomainAxiomsMetric}}</p>
+              <p>DataPropertyRangeAxiomsMetric: {{dataMetrics.DataPropertyRangeAxiomsMetric}}</p>
+            </div>
             <h3>Individual Axioms</h3>
-            <h3>Annotation Axioms</h3>
+            <div class="base_metric">
+              <p>Class Assertion Axioms Metric: {{individualMetrics.classAssertionAxiomsMetric}}</p>
+              <p>Object Property Assertion Axioms Metric: {{individualMetrics.objectPropertyAssertionAxiomsMetric}}</p>
+              <p>Data Property Assertion Axioms Metric: {{individualMetrics.dataPropertyAssertionAxiomsMetric}}</p>
+              <p>Negative Object Property Assertion Axioms Metric: {{individualMetrics.negativeObjectPropertyAssertionAxiomsMetric}}</p>
+              <p>Negative Data Property Assertion Axioms Metric: {{individualMetrics.negativeDataPropertyAssertionAxiomsMetric}}</p>
+              <p>Same Individuals Axioms Metric: {{individualMetrics.sameIndividualsAxiomsMetric}}</p>
+              <p>Different Individuals Axioms Metric: {{individualMetrics.differentIndividualsAxiomsMetric}}</p>
+            </div>
           </div>
           <div *ngSwitchCase="'5'">
+            <h1>Validator</h1>
+            <div><label>The status of you ontology:</label><div placeholder="status" class="result-validation-box">{{validationReport}}</div></div>
+          </div>
+          <div *ngSwitchCase="'6'">
             <h1>SPARQL Query</h1>
             <div><label>Query:</label><textarea placeholder="Insert query" class="query-box"></textarea></div>
             <div><label>Query Result:</label><div placeholder="Result of the query" class="result-query-box"></div></div>
           </div>
         </div>
       </div>
-      <div class="Column container">
-            <h1>OWL Ontology</h1>
+      <!-- ----------------------------------------------second half of the webpage---------------------------------------------------------e -->
+      <div class="Column">
+        <div [ngSwitch]="num">
+          <div *ngSwitchCase="'1'">
+            <h1> Graph representation</h1>
+            <button class="button" (click)="tripleToOntology()">Convert</button>
+            <button [class]="buttonClass" (click)="changeGraph()">{{buttonText}}</button>
+            <button class="button" (click)="clearGraph()">↻</button>
+            <div id="cy"></div>
+          </div>
+          <div *ngSwitchDefault>
+            <h1>Generated Ontology</h1>
             <label for="ontologyInput">Load existing ontology</label>
             <input type="file" (change)="onOntologySelected($event)" id="ontologyInput"/>
-        <div>
-          <button class="button" (click)="validateOntology()">Validate</button>
-          <button (click)="downloadFile()" class="button">Download</button>
-          <label>Convert: </label>
-          <select id="dropdown">
-            <option *ngFor="let syntax of ontologyFormatsConverted">{{syntax}}</option>
-          </select>
+            <div>
+              <button class="button" (click)="validateOntology()">Validate</button>
+              <button (click)="downloadFile()" class="button">Download</button>
+              <label>Convert: </label>
+            </div>
+            <pre class="prettyprint linenums ontology-container" [contentEditable]="true"><code>{{onto}}</code></pre>
+          </div>
         </div>
-          <pre class="prettyprint linenums language-owl" [contentEditable]="true"><code>{{onto}}</code></pre>
       </div>
     </div>
   </div>
@@ -160,53 +183,5 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-core.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/plugins/autoloader/prism-autoloader.min.js"></script>
 <script src="https://cdn.rawgit.com/google/code-prettify/master/src/prettify.js"></script>
-<script>
-  // Run prettify() function to apply code highlighting and line numbers
-  PR.prettyPrint();
-</script>
-
-
 </body>
 </html>
-
-<!--  </div>-->
-<!--  <div class="labels">-->
-<!--    <label>Describe your ontology:</label>-->
-<!--    <button class="button" id="deactivateBtn" (click)="generateFunction(myPrompt.value)">Generate</button>-->
-<!--    <button class="button" id="clearBtn" (click)="resetFileInput()">Reset</button>-->
-<!--    <label class="label2">Generated ontology:</label>-->
-<!--    &lt;!&ndash;    <button class="button" (click)="loadOntology()">Protege</button>&ndash;&gt;
-    <button class="button" (click)="validateOntology()">Validate</button>-->
-<!--    <button (click)="downloadFile()" class="button">Download</button>-->
-<!--    <label class="label2">Convert to:</label>-->
-<!--    <select id="dropdown">-->
-<!--      <option *ngFor="let syntax of ontologyFormatsConverted">{{syntax}}</option>-->
-<!--    </select>-->
-
-<!--  </div>-->
-<!--  <img src="/assets/images/loading2.gif" alt="load" id="myImg"/>-->
-<!--  <div class="modify_ontology">-->
-<!--    <p></p>-->
-<!--    <button class="button" (click)="class()">class</button>-->
-<!--    <button class="button" (click)="op()">object property</button>-->
-<!--    <button class="button" (click)="dp()">data property</button>-->
-<!--    <button class="button" (click)="individual()">individual </button>-->
-<!--  </div>-->
-<!--  <div class="grid-container">-->
-
-<!--    <div class="input-box">-->
-<!--      <textarea placeholder="Type your message here..." #myPrompt></textarea>-->
-<!--    </div>-->
-<!--    <div class="output-box" [contentEditable]="true" aria-placeholder="The ontology will be generated here">-->
-<!--       <pre #pre>-->
-<!--         {{onto}}-->
-<!--       </pre>-->
-<!--    </div>-->
-<!--  </div>-->
-<!--  <div class = "load">-->
-<!--  <p>Load existing ontology</p>-->
-<!--  <input type="file" (change)="onOntologySelected($event)" id="ontologyInput"/>-->
-<!--  </div>-->
-
-<!--</div>-->
-

@@ -4,7 +4,3 @@ export class Edge {
   range: string | undefined;
   type: string | undefined;
 }
-/*    private String name;
-    private String domain;
-    private String range;
-    private String type;*/

@@ -5,9 +5,12 @@ import * as cytoscape from 'cytoscape';
 import {GeneratorService} from '../service/generatorService';
 import {HttpClient} from "@angular/common/http";
 import { saveAs } from 'file-saver';
-import Prism from 'prismjs'; // Import Prism.js module
-import {DomSanitizer, SafeHtml} from "@angular/platform-browser";
-import {BaseMetrics} from "../service/BaseMetrics";
+import { AfterViewChecked } from '@angular/core';
+import {BaseMetrics} from "../model/BaseMetrics";
+import {ClassAxiomsMetrics} from "../model/ClassAxiomsMetrics";
+import {ObjectPropertyAxiomsMetrics} from "../model/ObjectPropertyAxiomsMetrics";
+import {DataPropertyAxiomsMetrics} from "../model/DataPropertyAxiomsMetrics";
+import {IndividualAxiomsMetrics} from "../model/IndividualAxiomsMetrics";
 
 @Component({
   selector: 'app-main-view',
@@ -17,88 +20,260 @@ import {BaseMetrics} from "../service/BaseMetrics";
 
 export class MainViewComponent implements OnInit {
   @Input() onto!: string;
-  ontologyFormatsConverted: string[]= ["OWL", "RDF", "TURTLE","Manchester Syntax","Functional Syntax", "KRSS2"];
-  baseMetrics!: BaseMetrics;
+  @Input() validationReport!: string;
+  @ViewChild('cy') cyContainer!: ElementRef;
+
+  cy: cytoscape.Core | null = null;
 
   num: string = '1';
-  formattedCode: SafeHtml | undefined;
 
-  @ViewChild('cy') cy!: ElementRef;
-  @ViewChild('pre') pre!: ElementRef;
+  //conversion
+  ontologyFormatsConverted: string[]= ["OWL", "RDF", "TURTLE","Manchester Syntax","Functional Syntax", "KRSS2"];
+  selectedOntologySyntax!: string;
+  converted: any;
 
+  //metrics management
+  baseMetrics!: BaseMetrics;
+  classMetrics!: ClassAxiomsMetrics;
+  objectMetrics!: ObjectPropertyAxiomsMetrics;
+  dataMetrics!: DataPropertyAxiomsMetrics;
+  individualMetrics!: IndividualAxiomsMetrics;
+
+  //file management
   selectedFile: File | null = null;
   isFileSelected = false;
   fileContent: string = '';
-  base_ontology!: string;
+  ontologyFileContent: string = '';
   ontologyFile: any;
+  constructor(private service: GeneratorService,private httpClient: HttpClient) {}
 
-  cyst!: any;
-  private selectedOption!: string;
+  // ngAfterViewChecked(): void {
+  //   // Check if 'Generate' view is currently active
+  //   if (this.num === '1') {
+  //     // If the savedGraphState exists, restore the graph state
+  //     if (this.savedGraphState) {
+  //       this.graphState = JSON.parse(JSON.stringify(this.savedGraphState));
+  //     }
+  //
+  //     // Initialize or re-initialize the cy object
+  //     this.cy = cytoscape({
+  //       container: document.getElementById('cy'),
+  //       elements: {
+  //         nodes: this.graphState.nodes,
+  //         edges: this.graphState.edges,
+  //       },
+  //     });
+  //
+  //     // Update graph with empty updates to refresh the graph without making any changes
+  //     // Also, make sure that updateGraph method won't mutate this.graphState if updates are empty
+  //     this.updateGraph([]);
+  //   }
+  // }
 
-  constructor(private service: GeneratorService) {
-  }
+//triplets
+  ontology_list! : any[];
+  apiKey = "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";
+  SELECTED_PROMPT = "STATELESS";
+
+  graphState = { nodes: [], edges: [] };
+  prompt = '';
+
+  buttonClass = '';
+  buttonText = '';
 
   ngOnInit(): void {
-    this.isFileSelected = false;
+    this.buttonClass = 'button';
+    this.buttonText = 'RDF Schema';
+    this.initializeCy();
     this.convert();
   }
 
-  convert(){
-    const dropdown = document.getElementById("dropdown") as HTMLSelectElement;
-    dropdown.addEventListener("change", (event) => {
-      // @ts-ignore
-      this.selectedOption = event.target.value;
-      console.log(this.selectedOption);
-      this.service.convertOntology(this.selectedOption, this.onto).subscribe((data: any) => {
-        console.log(data);
-        console.log(data[0]);
-        this.onto = data[0];
-      });
+  initializeCy() {
+    this.cy = cytoscape({
+      container: document.getElementById('cy'),
+      elements: {
+        nodes: this.graphState.nodes,
+        edges: this.graphState.edges,
+      },
     });
   }
 
-  downloadFile() {
-    if (this.onto) {
-      let fileExtension = '';
-      switch (this.selectedOption) {
-        case 'OWL':
-          fileExtension = 'owl';
-          break;
-        case 'RDF':
-          fileExtension = 'rdf';
-          break;
-        case 'TURTLE':
-          fileExtension = 'ttl';
-          break;
-        case 'Manchester Syntax':
-          fileExtension = 'ms';
-          break;
-        case 'Functional Syntax':
-          fileExtension = 'fs';
-          break;
-        case 'KRSS2':
-          fileExtension = 'krss2';
-          break;
-        default:
-          fileExtension = 'txt';
-          break;
-      }
-      const blob = new Blob([this.onto], {type: 'text/plain;charset=utf-8'});
-      saveAs(blob, 'ontology.'+fileExtension);
+  updateNum(s: string) {
+    this.num = s; // then change num value
+
+    switch (s) {
+      case "1":
+        this.num = '1';
+        break;
+      case "2":
+        this.num = '2';
+        break;
+      case "3":
+        this.num = '3';
+        break;
+      case "4":
+        this.num = '4';
+        this.performMetricsRequest();
+        break;
+      case "5":
+        console.log("wtf");
+        this.performValidation();
+        this.num = '5';
+        break;
+      case "6":
+        this.num = '6';
+        break;
+      default:
+        this.num = '1';
+        break;
     }
+  this.clearGraph();
   }
 
-  // @HostListener('window:beforeunload', ['$event'])
-  // unloadNotification($event: BeforeUnloadEvent) {
-  //   if (!this.canReload()) {
-  //     $event.preventDefault();
-  //     $event.returnValue = '';
-  //   }
-  // }
-  //
-  // canReload(): boolean {
-  //   return confirm('Are you sure you want to reload the website?');
-  // }
+  updateGraph(updates: any[]) {
+    let current_graph = JSON.parse(JSON.stringify(this.graphState));
+
+    if (updates.length === 0) {
+      return;
+    }
+
+    if (typeof updates[0] === "string") {
+      updates = [updates];
+    }
+
+    console.log("updates: ");
+    console.log(updates)
+    updates.forEach(update => {
+      if (update.length === 3) {
+        const [entity1, relation, entity2] = update;
+        // if (relation.includes('rdf')) {
+        //   return;
+        // }
+        let node1 = current_graph.nodes.find((node: { id: any; }) => node.id === entity1);
+        let node2 = current_graph.nodes.find((node: { id: any; }) => node.id === entity2);
+
+        if (node1 === undefined) {
+          current_graph.nodes.push({ id: entity1, label: entity1, color: "#ffffff" });
+        }
+
+        if (node2 === undefined) {
+          current_graph.nodes.push({ id: entity2, label: entity2, color: "#ffffff" });
+        }
+
+        let edge = current_graph.edges.find((edge: { from: any; to: any; }) => edge.from === entity1 && edge.to === entity2);
+        if (edge !== undefined) {
+          edge.label = relation;
+          return;
+        }
+
+        current_graph.edges.push({ from: entity1, to: entity2, label: relation });
+
+      } else if (update.length === 2 && update[1].startsWith("#")) {
+        const [entity, color] = update;
+
+        let node = current_graph.nodes.find((node: { id: any; }) => node.id === entity);
+
+        if (node === undefined) {
+          current_graph.nodes.push({ id: entity, label: entity, color: color });
+          return;
+        }
+
+        node.color = color;
+
+      } else if (update.length === 2 && update[0] === "DELETE") {
+        const [_, index] = update;
+
+        let node = current_graph.nodes.find((node: { id: any; }) => node.id === index);
+
+        if (node === undefined) {
+          return;
+        }
+
+        current_graph.nodes = current_graph.nodes.filter((node: { id: any; }) => node.id !== index);
+        current_graph.edges = current_graph.edges.filter((edge: { from: any; to: any; }) => edge.from !== index && edge.to !== index);
+      }
+    });
+
+    this.graphState = current_graph;
+
+    console.log("before cysto: ");
+    console.log(this.graphState);
+    // @ts-ignore
+    const nodes = this.graphState.nodes.map(node => ({ data: { id: node.id, label: node.label, color: node.color } }));
+    // @ts-ignore
+    const edges = this.graphState.edges.map(edge => ({ data: { id: edge.id, source: edge.from, target: edge.to, label: edge.label } }));
+
+    this.cy = cytoscape({
+      container: document.getElementById('cy'),
+      elements: [
+        ...nodes,
+        ...edges
+      ],
+      style: [
+        {
+          selector: 'node',
+          style: {
+            'label': 'data(label)',
+            'background-color': '#6495ed',
+            'border-color': '#000',
+            'border-width': '1px',
+            'width': '50px',
+            'height': '50px'
+          }
+        },
+        {
+          selector: 'edge',
+          style: {
+            'label': 'data(label)',
+            'curve-style': 'bezier',
+            'target-arrow-shape': 'triangle',
+            'target-arrow-color': '#000',
+            'line-color': '#000',
+            'width': '1px'
+          }
+        }
+      ]
+    });
+    document.body.style.cursor = "auto";
+  }
+
+  clearGraph() {
+    console.log(this.graphState);
+    // @ts-ignore
+    this.cy = cytoscape({
+      container: document.getElementById('cy'),
+      elements: [
+        // @ts-ignore
+        ...(this.graphState.nodes.map(node => ({ data: { id: node.id, label: node.label, color: node.color } }))),
+        // @ts-ignore
+        ...(this.graphState.edges.map(edge => ({ data: { id: edge.id, source: edge.from, target: edge.to, label: edge.label } })))
+      ],
+      style: [
+        {
+          selector: 'node',
+          style: {
+            'label': 'data(label)',
+            'background-color': '#6495ed',
+            'border-color': '#000',
+            'border-width': '1px',
+            'width': '50px',
+            'height': '50px'
+          }
+        },
+        {
+          selector: 'edge',
+          style: {
+            'label': 'data(label)',
+            'curve-style': 'bezier',
+            'target-arrow-shape': 'triangle',
+            'target-arrow-color': '#000',
+            'line-color': '#000',
+            'width': '1px'
+          }
+        }
+      ]
+    });
+  }
 
   onOntologySelected(event: any) {
     const file1: File = event.target.files[0];
@@ -106,9 +281,9 @@ export class MainViewComponent implements OnInit {
     reader.readAsText(file1);
     reader.onload = (e) => {
       // @ts-ignore
-      this.fileContent = reader.result.toString();
-      console.log(this.fileContent.toString());
-      this.onto = this.fileContent.toString();
+      this.ontologyFileContent = reader.result.toString();
+      console.log(this.ontologyFileContent.toString());
+      this.onto = this.ontologyFileContent.toString();
     };
   }
 
@@ -170,46 +345,6 @@ export class MainViewComponent implements OnInit {
   window.open(url, '_blank');
 }
 
-  generateFunction(value: string) {
-    const apiKeyInput = document.getElementById('apikey') as HTMLInputElement;
-    const apiKeyValue = apiKeyInput.value;
-    console.log(apiKeyValue); // logs the value inside the apiKeyInput
-
-    if (this.isFileSelected) {
-      value += this.fileContent.toString();
-      value += this.base_ontology;
-      console.log(value);
-    }
-    if (apiKeyValue == "" || apiKeyValue == null) {
-      alert("Insert your api key")
-    } else {
-      const deactivateBtn = document.getElementById(
-        'deactivateBtn'
-      ) as HTMLButtonElement;
-      const myDiv = document.getElementById('myDiv') as HTMLDivElement;
-      myDiv.style.opacity = '0.5'; // set the opacity to make it look deactivated
-      myDiv.style.pointerEvents = 'none'; // disable pointer events to prevent user interaction
-      this.showImage();
-
-      this.service.generateOntology(apiKeyValue, value).subscribe((data: any) => {
-        console.log(data);
-        console.log(data[0]);
-        this.onto = data[0];
-        this.base_ontology = data[0];
-        myDiv.style.opacity = '1'; // reset the opacity
-        myDiv.style.pointerEvents = 'auto'; // enable pointer events
-        this.hideImage();
-      });
-    }
-  }
-
-  resetFileInput() {
-    const fileInput = document.getElementById('fileInput') as HTMLInputElement;
-    fileInput.value = '';
-    this.fileContent = '';
-    this.isFileSelected = false;
-  }
-
   validateOntology() {
     if (this.onto) {
       this.service.validateOntology(this.onto).subscribe((data: any) => {
@@ -218,178 +353,219 @@ export class MainViewComponent implements OnInit {
     }
   }
 
-  visualize() {
-    const cyDiv = document.getElementById("cy") as HTMLDivElement;
-    if (cyDiv) {
-      cyDiv.hidden = false;
+
+  async queryStatelessPrompt(prompt: string, apiKey: string) {
+    try {
+      const response = await this.httpClient.get('assets/prompt/stateless.prompt', { responseType: 'text' }).toPromise();
+      // @ts-ignore
+      const promptText = response.replace("$prompt", prompt);
+      console.log(promptText);
+
+      this.service.generateOntology(apiKey, promptText).subscribe((data: any[]) => {
+
+        const triples = data.toString().replace("],\n]", "]]");
+        console.log("data :" + data);
+        this.ontology_list = data;
+        if (data.length > 0) {
+          const updates = JSON.parse(data[0]);
+          console.log(updates);
+          this.updateGraph(updates);
+        } else {
+          console.error('Invalid data format');
+        }
+      });
+
+    } catch (error) {
+      console.log(error);
+      alert(error);
     }
-    this.getGraph();
   }
 
-  getGraph() {
-      if (this.onto) {
-        this.service.generateGraph(this.onto).subscribe(response => {
-          const nodes = response.nodes.map(node => ({data: {id: node.name, type: node.type}}));
-          const edges = response.edges.map(edge => ({
-            data: {
-              id: edge.name,
-              source: edge.domain,
-              target: edge.range,
-              type: edge.type
-            }
-          }));
-          this.cyst = cytoscape({
-            container: document.getElementById('cy'),
-            style: [
-              {
-                selector: 'node[type="individual"]',
-                style: {
-                  'font-weight': 'bold',
-                  'background-color': 'purple',
-                  'label': 'data(id)',
-                  'text-halign': 'center',
-                  'text-valign': 'center',
-                  'font-size': '12px',
-                  'color': 'black',
-                  'width': function (ele: { data: (arg0: string) => { (): any; new(): any; length: number; }; }) {
-                    return (ele.data('id').length * 7) + 'px';
-                  },
-                  'height': function (ele) {
-                    return (ele.data('id').length * 7) + 'px';
-                  },
-                  'shape': 'star',
-                }
-              },
-              {
-                selector: 'node[type="data_property"]',
-                style: {
-                  'font-weight': 'bold',
-                  'background-color': 'lightgreen',
-                  'label': 'data(id)',
-                  'text-halign': 'center',
-                  'text-valign': 'center',
-                  'font-size': '12px',
-                  'color': 'black',
-                  'width': function (ele: { data: (arg0: string) => { (): any; new(): any; length: number; }; }) {
-                    return (ele.data('id').length * 7) + 'px';
-                  },
-                  'height': function (ele) {
-                    return (ele.data('id').length * 7) + 'px';
-                  },
-                  'shape': 'rectangle',
-                }
-              },
-              {
-                selector: 'node[type="concept"]',
-                style: {
-                  'font-weight': 'bold',
-                  'background-color': 'lightblue',
-                  'label': 'data(id)',
-                  'text-halign': 'center',
-                  'text-valign': 'center',
-                  'font-size': '12px',
-                  'color': 'black',
-                  'width': function (ele: { data: (arg0: string) => { (): any; new(): any; length: number; }; }) {
-                    return (ele.data('id').length * 7) + 'px';
-                  },
-                  'height': function (ele) {
-                    return (ele.data('id').length * 7) + 'px';
-                  },
-                  'shape': 'ellipse',
-                }
-              },
-              {
-                selector: 'edge',
-                style: {
-                  'font-weight': 'bold',
-                  'font-size': '15px',
-                  'curve-style': 'bezier',
-                  'target-arrow-shape': 'triangle',
-                  'label': 'data(id)',
-                  'line-color': 'lightblue',
-                  'target-arrow-color': '#ccc',
-                  'target-arrow-fill': 'filled'
-                }
-              }
-            ],
-            elements: [
-              ...nodes,
-              ...edges
-            ],
-            layout: {
-              name: 'cose'
-            }
+  async queryStatefulPrompt(prompt: string, apiKey: string) {
+    try {
+      const response = await this.httpClient.get('assets/prompt/stateful.prompt', { responseType: 'text' }).toPromise();
+      // @ts-ignore
+      const promptText = response.replace("$prompt", prompt);
+      console.log(promptText);
+
+      this.service.generateOntology(apiKey, promptText).subscribe((data: any[]) => {
+        this.ontology_list = data;
+        if (data.length > 0) {
+          const choices = JSON.parse(data[0]);
+          const text = choices[0];
+          console.log(text);
+
+          const updates = JSON.parse(`[${text.map((value: any) => `"${value}"`).join(',')}]`);
+
+          //this.list.push(...updates);
+          //console.log(updates);
+
+          this.updateGraph(updates);
+        } else {
+          console.error('Invalid data format');
+        }
+      });
+    } catch (error) {
+      console.log(error);
+      alert(error);
+    }
+  }
+
+  async queryPrompt(prompt: string, apiKey: string) {
+    if (this.SELECTED_PROMPT === "STATELESS") {
+      await this.queryStatelessPrompt(prompt, apiKey);
+    } else if (this.SELECTED_PROMPT === "STATEFUL") {
+      await this.queryStatefulPrompt(prompt, apiKey);
+    } else {
+      alert("Please select a prompt");
+    }
+  }
+
+  // clearState() {
+  //   this.graphState = {
+  //     nodes: [],
+  //     edges: []
+  //   };
+  // }
+
+  generateFunction() {
+    document.body.style.cursor = 'wait';
+
+    //(document.getElementsByClassName("generateButton")[0] as HTMLButtonElement).disabled = true;
+    const apiKeyInput = document.getElementById("apikey") as HTMLInputElement;
+    const apiKey = apiKeyInput.value;
+console.log(apiKey)
+    const prompt: string = (document.getElementsByClassName("abstract")[0] as HTMLInputElement).value;
+
+    this.queryPrompt(prompt, apiKey);
+  }
+
+  changeGraph() {
+    this.buttonClass = this.buttonClass === 'button' ? 'button_secundar' : 'button';
+    this.buttonText = this.buttonText === 'RDF Schema' ? 'Knowledge Schema' : 'RDF Schema';
+  }
+
+  tripleToOntology() {
+    const triplets = String(this.ontology_list);
+    console.log(triplets);
+    this.service.tripletsToOntology(triplets).subscribe((data: any) => {
+            console.log(data);
+            console.log(data[0]);
+            this.onto = data[0];
+            this.hideImage();
           });
-        });
-      }
-  }
-
-  focusGraph() {
-    const cyDiv = document.getElementById("cy") as HTMLDivElement;
-    if (cyDiv) {
-      cyDiv.hidden = false;
-    }
-    const container = this.cyst.container();
-    const rect = container.getBoundingClientRect();
-    const center = {
-      x: rect.width / 3,
-      y: rect.height / 4,
-    };
-    this.cyst.animate({
-      pan: center,
-      zoom: 1
-    }, {
-      duration: 1000
-    });
-  }
-
-  class() {
+    this.num = '2';
 
   }
 
-  op() {
-
-  }
-
-  dp() {
-
-  }
-
-  individual() {
-
-  }
-
-  updateNum(s: string) {
-    switch (s) {
-      case "1":
-        this.num = '1';
-        break;
-      case "2":
-        this.num = '2';
-        break;
-      case "3":
-        this.num = '3';
-        break;
-      case "4":
-        this.num = '4';
-        break;
-      case "5":
-        this.num = '5';
-        break;
-      default:
-        this.num = '1';
-        break;
-    }
-    this.performBaseMetricsRequest();
-  }
-  performBaseMetricsRequest() {
+  performMetricsRequest() {
     if (this.onto) {
       console.log(this.onto);
       this.service.getBaseMetrics(this.onto).subscribe(response => {
         this.baseMetrics = response;
       });
+      this.service.getClassMetrics(this.onto).subscribe(response => {
+        this.classMetrics = response;
+      });
+      this.service.getDataMetrics(this.onto).subscribe(response => {
+        this.dataMetrics = response;
+      });
+      this.service.getIndividualMetrics(this.onto).subscribe(response => {
+        this.individualMetrics = response;
+      });
+      this.service.getObjectMetrics(this.onto).subscribe(response => {
+        this.objectMetrics = response;
+      });
     }
   }
 
+  performValidation() {
+    this.service.validateOntology(this.onto).subscribe((data: any) => {
+      this.validationReport = this.formatValidationReport(data);
+    });
+  }
 
+  formatValidationReport(report: string): string {
+    const statements = report.split("On statement: ");
+    let formattedReport = "";
+
+    for (const statement of statements.slice(1)) {
+      const [subject, predicate, ignored1, objectValue, ignored2] = statement.split(" ");
+
+      const formattedStatement = `${subject} ${predicate}: ${objectValue}\n`;
+      formattedReport += formattedStatement;
+    }
+
+    return formattedReport.trim();
+  }
+
+  convert(){
+    const dropdown = document.getElementById("dropdown") as HTMLSelectElement;
+    dropdown.addEventListener("change", (event) => {
+      // @ts-ignore
+      this.selectedOntologySyntax = event.target.value;
+      console.log(this.selectedOntologySyntax);
+      let syntax!: string;
+      switch (this.selectedOntologySyntax) {
+        case 'OWL':
+          syntax = 'owl';
+          break;
+        case 'RDF':
+          syntax = 'rdf';
+          break;
+        case 'TURTLE':
+          syntax = 'ttl';
+          break;
+        case 'Manchester Syntax':
+          syntax = 'ms';
+          break;
+        case 'Functional Syntax':
+          syntax = 'fs';
+          break;
+        case 'KRSS2':
+          syntax = 'krss2';
+          break;
+        default:
+          syntax = 'txt';
+          break;
+      }
+      console.log(syntax);
+      this.service.convertOntology(syntax, this.onto).subscribe((data: any) => {
+        console.log(data);
+        console.log(data[0]);
+        this.converted = data[0];
+      });
+    });
+  }
+
+  downloadFile() {
+    if (this.onto) {
+      let fileExtension = '';
+      switch (this.selectedOntologySyntax) {
+        case 'OWL':
+          fileExtension = 'owl';
+          break;
+        case 'RDF':
+          fileExtension = 'rdf';
+          break;
+        case 'TURTLE':
+          fileExtension = 'ttl';
+          break;
+        case 'Manchester Syntax':
+          fileExtension = 'ms';
+          break;
+        case 'Functional Syntax':
+          fileExtension = 'fs';
+          break;
+        case 'KRSS2':
+          fileExtension = 'krss2';
+          break;
+        default:
+          fileExtension = 'txt';
+          break;
+      }
+      const blob = new Blob([this.onto], {type: 'text/plain;charset=utf-8'});
+      saveAs(blob, 'ontology.'+fileExtension);
+    }
+  }
 }

@@ -1,137 +1,15 @@
-A possible ontology generated from the abstract is:
-
-<rdf:RDF
-    xmlns="http://example.com/ontology#"
-    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
-    xmlns:owl="http://www.w3.org/2002/07/owl#"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
-
-  <owl:Ontology rdf:about="http://example.com/ontology"/>
-
-  <!-- Classes -->
-  <owl:Class rdf:about="http://example.com/ontology#Scoliosis">
-    <rdfs:label>Scoliosis</rdfs:label>
-  </owl:Class>
-
-  <owl:Class rdf:about="http://example.com/ontology#MildScoliosis">
-    <rdfs:label>Mild Scoliosis</rdfs:label>
-    <rdfs:subClassOf rdf:resource="http://example.com/ontology#Scoliosis"/>
-  </owl:Class>
-
-  <owl:Class rdf:about="http://example.com/ontology#SevereScoliosis">
-    <rdfs:label>Severe Scoliosis</rdfs:label>
-    <rdfs:subClassOf rdf:resource="http://example.com/ontology#Scoliosis"/>
-  </owl:Class>
-
-  <owl:Class rdf:about="http://example.com/ontology#ScoliosisComplication">
-    <rdfs:label>Scoliosis Complication</rdfs:label>
-  </owl:Class>
-
-  <owl:Class rdf:about="http://example.com/ontology#BreathingProblem">
-    <rdfs:label>Breathing Problem</rdfs:label>
-    <rdfs:subClassOf rdf:resource="http://example.com/ontology#ScoliosisComplication"/>
-  </owl:Class>
-
-  <owl:Class rdf:about="http://example.com/ontology#BackProblem">
-    <rdfs:label>Back Problem</rdfs:label>
-    <rdfs:subClassOf rdf:resource="http://example.com/ontology#ScoliosisComplication"/>
-  </owl:Class>
-
-  <owl:Class rdf:about="http://example.com/ontology#AppearanceProblem">
-    <rdfs:label>Appearance Problem</rdfs:label>
-    <rdfs:subClassOf rdf:resource="http://example.com/ontology#ScoliosisComplication"/>
-  </owl:Class>
-
-  <owl:Class rdf:about="http://example.com/ontology#RiskFactor">
-    <rdfs:label>Risk Factor</rdfs:label>
-  </owl:Class>
-
-  <!-- Object Properties -->
-  <owl:ObjectProperty rdf:about="http://example.com/ontology#hasComplication">
-    <rdfs:label>has complication</rdfs:label>
-    <rdfs:domain rdf:resource="http://example.com/ontology#Scoliosis"/>
-    <rdfs:range rdf:resource="http://example.com/ontology#ScoliosisComplication"/>
-  </owl:ObjectProperty>
-
-  <!-- Data Properties -->
-  <owl:DatatypeProperty rdf:about="http://example.com/ontology#hasSymptom">
-    <rdfs:label>has symptom</rdfs:label>
-    <rdfs:domain rdf:resource="http://example.com/ontology#Scoliosis"/>
-    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
-  </owl:DatatypeProperty>
-
-  <owl:DatatypeProperty rdf:about="http://example.com/ontology#hasCause">
-    <rdfs:label>has cause</rdfs:label>
-    <rdfs:domain rdf:resource="http://example.com/ontology#Scoliosis"/>
-    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
-  </owl:DatatypeProperty>
-
-  <owl:DatatypeProperty rdf:about="http://example.com/ontology#hasRiskFactor">
-    <rdfs:label>has risk factor</rdfs:label>
-    <rdfs:domain rdf:resource="http://example.com/ontology#Scoliosis"/>
-    <rdfs:range rdf:resource="http://example.com/ontology#RiskFactor"/>
-  </owl:DatatypeProperty>
-
-  <!-- Individuals -->
-  <rdf:Description rdf:about="http://example.com/ontology#scoliosis">
-    <rdf:type rdf:resource="http://example.com/ontology#Scoliosis"/>
-    <hasSymptom>Uneven shoulders</hasSymptom>
-    <hasSymptom>Prominence on one side of the back when bending forward</hasSymptom>
-    <hasSymptom>Uneven waist</hasSymptom>
-    <!-- more symptoms here -->
-    <hasCause>Unknown cause</hasCause>
-    <hasRiskFactor>
-      <owl:Class rdf:about="http://example.com/ontology#Age">
-        <rdfs:label>Age</rdfs:label>
-      </owl:Class>
-    </hasRiskFactor>
-    <hasRiskFactor>
-      <owl:Class rdf:about="http://example.com/ontology#Sex">
-        <rdfs:label>Sex</rdfs:label>
-      </owl:Class>
-    </hasRiskFactor>
-    <!-- more risk factors here -->
-    <hasComplication rdf:resource="http://example.com/ontology#breathingProblem"/>
-    <hasComplication rdf:resource="http://example.com/ontology#backProblem"/>
-    <hasComplication rdf:resource="http://example.com/ontology#appearanceProblem"/>
-  </rdf:Description>
-
-  <rdf:Description rdf:about="http://example.com/ontology#mildScoliosis">
-    <rdf:type rdf:resource="http://example.com/ontology#MildScoliosis"/>
-    <rdfs:subClassOf rdf:resource="http://example.com/ontology#scoliosis"/>
-  </rdf:Description>
-
-  <rdf:Description rdf:about="http://example.com/ontology#severeScoliosis">
-    <rdf:type rdf:resource="http://example.com/ontology#SevereScoliosis"/>
-    <rdfs:subClassOf rdf:resource="http://example.com/ontology#scoliosis"/>
-  </rdf:Description>
-
-  <rdf:Description rdf:about="http://example.com/ontology#breathingProblem">
-    <rdf:type rdf:resource="http://example.com/ontology#BreathingProblem"/>
-  </rdf:Description>
-
-  <rdf:Description rdf:about="http://example.com/ontology#backProblem">
-    <rdf:type rdf:resource="http://example.com/ontology#BackProblem"/>
-  </rdf:Description>
-
-  <rdf:Description rdf:about="http://example.com/ontology#appearanceProblem">
-    <rdf:type rdf:resource="http://example.com/ontology#AppearanceProblem"/>
-  </rdf:Description>
-
-  <rdf:Description rdf:about="http://example.com/ontology#age">
-    <rdf:type rdf:resource="http://example.com/ontology#RiskFactor"/>
-    <rdfs:label>Age</rdfs:label>
-  </rdf:Description>
-
-  <rdf:Description rdf:about="http://example.com/ontology#sex">
-    <rdf:type rdf:resource="http://example.com/ontology#RiskFactor"/>
-    <rdfs:label>Sex</rdfs:label>
-  </rdf:Description>
-
-  <rdf:Description rdf:about="http://example.com/ontology#familyHistory">
-    <rdf:type rdf:resource="http://example.com/ontology#RiskFactor"/>
-    <rdfs:label>Family History</rdfs:label>
-  </rdf:Description>
-
-</rdf:RDF>
+[
+["Person", "rdf:type", "owl:Class"],
+ ["Age", "rdf:type", "owl:Class"],
+ ["City", "rdf:type", "owl:Class"],
+ ["Anna", "rdf:type", "Person"],
+ ["England", "rdf:type", "City"],
+ ["residesIn", "rdf:type", "owl:ObjectProperty"],
+ ["residesIn", "rdfs:domain", "Person"],
+ ["residesIn", "rdfs:range", "City"],
+ ["hasAge", "rdf:type", "owl:DatatypeProperty"],
+ ["hasAge", "rdfs:domain", "Person"],
+ ["hasAge", "rdfs:range", "xsd:integer"],
+ ["Anna", "residesIn", "England"],
+ ["Anna", "hasAge", "25"]
+]

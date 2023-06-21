@@ -1,6 +1,7 @@
 package com.example.onto_generator.controller;
 
 import com.example.onto_generator.model.BaseMetrics;
+import com.example.onto_generator.service.MetricsService;
 import com.example.onto_generator.service.OntologyService;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -36,19 +37,13 @@ import java.util.List;
 public class OntologyController {
 
     @Autowired
-    private OntologyService service;
-
-    @CrossOrigin(origins = "http://localhost:4200")
-    @PostMapping("/generate/{apikey}")
-    public ResponseEntity<List<String>> generate(@PathVariable String apikey, @RequestBody String prompt) throws Exception {
-        return ResponseEntity.ok(Collections.singletonList(service.chatGPT(apikey, prompt)));
-    }
+    private OntologyService ontologyService;
 
     @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/graph")
     public ResponseEntity<?> getOntologyGraph(@RequestBody String onto) {
         System.out.println("loaded: " + onto);
-        return ResponseEntity.ok(service.getGraph(onto));
+        return ResponseEntity.ok(ontologyService.getGraph(onto));
     }
 
     @CrossOrigin(origins = "http://localhost:4200")
@@ -60,17 +55,14 @@ public class OntologyController {
     @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/convert/{syntax}")
     public ResponseEntity<List<String>> convert(@PathVariable String syntax, @RequestBody String onto) {
-        return ResponseEntity.ok(Collections.singletonList(service.convertOntology(syntax, onto)));
+        return ResponseEntity.ok(Collections.singletonList(ontologyService.convert(syntax, onto)));
     }
 
     @CrossOrigin(origins = "http://localhost:4200")
-    @PostMapping("/metrics")
-    public ResponseEntity<BaseMetrics> metrics(@RequestBody String onto) throws OWLOntologyCreationException {
-        System.out.println("here is the controller");
-        System.out.println(onto);
-        return ResponseEntity.ok(service.baseMetrics(onto));
+    @PostMapping("/validator")
+    public ResponseEntity<List<String>> validator(@RequestBody String onto) throws OWLOntologyCreationException {
+        return ResponseEntity.ok(Collections.singletonList(ontologyService.validateOntology(onto)));
     }
-
 
     private String chatGPT(String apikey, String text) throws Exception {
         CloseableHttpClient httpClient = HttpClients.createDefault();
@@ -261,17 +253,5 @@ public class OntologyController {
         // The ontology is valid
         return "Ontology is valid!";
     }
-
-//    @CrossOrigin(origins = "http://localhost:4200")
-//    @GetMapping("/ontology")
-//    public ResponseEntity<ByteArrayResource> getOntology() throws IOException {
-//        File ontologyFile = new File("src/main/resources/ontology.owl");
-//        byte[] bytes = Files.readAllBytes(ontologyFile.toPath());
-//        ByteArrayResource resource = new ByteArrayResource(bytes);
-//        return ResponseEntity.ok()
-//                .contentLength(bytes.length)
-//                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-//                .body(resource);
-//    }
 
 }
