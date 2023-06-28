@@ -61,7 +61,7 @@
             <button (click)="openai()" class="button_secundar">OpenAI</button>
             <div>
               <button class="button" id="deactivateBtn" (click)="generateFunction()">Generate</button>
-              <button class="button_secundar" id="clearBtn" (click)="clearGraph()">Clear</button>
+              <button class="button_secundar" id="clearBtn" (click)="clearState(); updateCystoGraph()">Clear</button>
             </div>
             <textarea class="abstract" [contentEditable]="true" placeholder="Describe your ontology here...">{{fileContent.toString()}}</textarea>
             <label>Load an abstract</label>
@@ -157,7 +157,7 @@
             <h1> Graph representation</h1>
             <button class="button" (click)="tripleToOntology()">Convert</button>
             <button [class]="buttonClass" (click)="changeGraph()">{{buttonText}}</button>
-            <button class="button" (click)="clearGraph()">↻</button>
+            <button class="button" (click)="updateCystoGraph()">↻</button>
             <div id="cy"></div>
           </div>
           <div *ngSwitchDefault>
@@ -165,9 +165,9 @@
             <label for="ontologyInput">Load existing ontology</label>
             <input type="file" (change)="onOntologySelected($event)" id="ontologyInput"/>
             <div>
-              <button class="button" (click)="validateOntology()">Validate</button>
+<!--             // <button class="button" (click)="validateOntology()">Validate</button>-->
               <button (click)="downloadFile()" class="button">Download</button>
-              <label>Convert: </label>
+<!--              <label>Convert: </label>-->
             </div>
             <pre class="prettyprint linenums ontology-container" [contentEditable]="true"><code>{{onto}}</code></pre>
           </div>

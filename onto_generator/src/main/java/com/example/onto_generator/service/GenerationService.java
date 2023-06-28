@@ -12,7 +12,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.semanticweb.HermiT.Reasoner;
 import org.semanticweb.owlapi.apibinding.OWLManager;
+import org.semanticweb.owlapi.dlsyntax.renderer.DLSyntaxObjectRenderer;
 import org.semanticweb.owlapi.formats.RDFXMLDocumentFormat;
+import org.semanticweb.owlapi.io.OWLObjectRenderer;
 import org.semanticweb.owlapi.io.OWLOntologyDocumentTarget;
 import org.semanticweb.owlapi.io.StreamDocumentTarget;
 import org.semanticweb.owlapi.io.StringDocumentTarget;
@@ -20,6 +22,7 @@ import org.semanticweb.owlapi.model.*;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import org.semanticweb.owlapi.reasoner.OWLReasonerFactory;
 import org.semanticweb.owlapi.reasoner.structural.StructuralReasonerFactory;
+import org.semanticweb.owlapi.vocab.OWL2Datatype;
 import org.semanticweb.owlapi.vocab.XSDVocabulary;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
@@ -36,77 +39,6 @@ import java.util.logging.Logger;
 @RequiredArgsConstructor
 public class GenerationService {
 
-    public String generateOntology(String apikey, String prompt) throws Exception {
-        System.out.println("here i am :"+prompt);
-        CloseableHttpClient httpClient = HttpClients.createDefault();
-        HttpPost httpPost = new HttpPost("https://api.openai.com/v1/completions");
-        httpPost.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-        httpPost.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + apikey);
-
-        JSONObject json = new JSONObject();
-        json.put("model", "text-davinci-003");
-
-        String filePath = "src/main/resources/context";
-        String instructions = new String(Files.readAllBytes(Paths.get(filePath)));
-
-        JSONArray messages = new JSONArray();
-
-        // System message with example instructions
-        JSONObject systemMessage = new JSONObject();
-        systemMessage.put("role", "system");
-        systemMessage.put("content", "As an ontology generator, your task is to analyze abstract texts from scientific papers and generate structured ontologies in the OWL format. You should extract relevant concepts, relationships, and domain-specific knowledge from the abstracts to create comprehensive and accurate ontological representations. Your generated ontologies should capture the key information present in the scientific papers and facilitate knowledge organization and retrieval in scientific domains.");
-        messages.put(systemMessage);
-
-        // User message with example instructions
-        JSONObject userMessage = new JSONObject();
-        userMessage.put("role", "user");
-        userMessage.put("content", instructions);
-        messages.put(userMessage);
-
-        // User message with the abstract prompt
-        JSONObject promptMessage = new JSONObject();
-        promptMessage.put("role", "user");
-        promptMessage.put("content", prompt);
-        messages.put(promptMessage);
-
-        json.put("messages", messages);
-
-        String requestBody = json.toString();
-
-        // Modify the request payload
-        JSONObject modifiedRequestJson = new JSONObject();
-        modifiedRequestJson.put("model", "text-davinci-003");
-        modifiedRequestJson.put("prompt", requestBody);
-
-        String modifiedRequestBody = modifiedRequestJson.toString();
-
-        StringEntity entity = new StringEntity(modifiedRequestBody);
-        httpPost.setEntity(entity);
-
-        // Remaining code remains the same
-        HttpResponse response = httpClient.execute(httpPost);
-        HttpEntity responseEntity = response.getEntity();
-
-        String jsonResponseString = EntityUtils.toString(responseEntity);
-        System.out.println(jsonResponseString);
-        JSONObject jsonResponse = new JSONObject(jsonResponseString);
-
-        JSONArray choices = jsonResponse.getJSONArray("choices");
-        if (choices.length() > 0) {
-            JSONObject choice = choices.getJSONObject(0);
-            String ontology = choice.getString("text");
-            System.out.println(ontology);
-
-            FileOutputStream outputStream = new FileOutputStream("ontology.owl");
-            outputStream.write(ontology.getBytes());
-            outputStream.close();
-
-            return ontology;
-        } else {
-            throw new Exception("No ontology generated.");
-        }
-    }
-
     public String gptRequest(String apikey, String text) throws Exception {
         CloseableHttpClient httpClient = HttpClients.createDefault();
         HttpPost httpPost = new HttpPost("https://api.openai.com/v1/chat/completions");
@@ -117,50 +49,28 @@ public class GenerationService {
         JSONObject json = new JSONObject();
         json.put("model", "gpt-3.5-turbo");
 
+
+        int firstPromptIndex = text.indexOf("prompt:");//index 1st occurence
+        int secondPromptIndex = text.indexOf("prompt:", firstPromptIndex + 1);//index 2nd occurence
+
+        String system_message = text.substring(0, secondPromptIndex);
+        String user_message = text.substring(secondPromptIndex);
+
+        system_message = system_message.trim();
+        user_message = user_message.trim();
+
         JSONArray messages = new JSONArray();
 
         JSONObject systemMessage = new JSONObject();
         systemMessage.put("role", "system");
-        systemMessage.put("content", "Please generate an RDF graph using triplets, creating a web of interconnected concepts, classes, and instances. Ensure that classes are clearly defined and appropriately hierarchical. Use more specific terms in classes and individuals to capture the nuances of the text prompt better. Finally, establish meaningful relationships among individuals using a diverse set of properties. The relationships should capture the effects, causes, and associations derived from the text prompt in detail.\n" +
-                "For any concepts identified, construct an RDF triple as follows: [CONCEPT, \"rdf:type\", \"owl:Class\"].If a concept is general, discern a suitable superclass to better illustrate the context.\n" +
-                "\n" +
-                "If the concepts identified is a subclass of another concept, create a triple as follows: [CONCEPT, \"rdfs:subClassOf\", SUPER_CONCEPT].\n" +
-                "\n" +
-                "For the an identified instance that refers to a single, specific item within a CONCEPT, create a triple as follows: [INDIVIDUAL, \"rdf:type\", CONCEPT].\n" +
-                "When defining relationships(connections) that describe how individuals are related to each other and they should be defined on their concepts, create triples as follows:\n" +
-                "[RELATIONSHIP, \"rdf:type\", \"owl:ObjectProperty\"],\n" +
-                "[RELATIONSHIP, \"rdfs:domain\", DOMAIN_CONCEPT],\n" +
-                "[RELATIONSHIP, \"rdfs:range\", RANGE_CONCEPT].\n" +
-                "\n" +
-                "In the case of attribute assignments to individuals (pay attentions to numbers, dates and measurement units in general) and they should be defined on their concepts, deliver triples as:\n" +
-                "[ATTRIBUTE, \"rdf:type\", \"owl:DatatypeProperty\"],\n" +
-                "[ATTRIBUTE, \"rdfs:domain\", DOMAIN_CONCEPT],\n" +
-                "[ATTRIBUTE, \"rdfs:range\", xsd:DATA_TYPE].\n" +
-                "Data types include: string, integer, date, time, boolean, etc.\n" +
-                "\n" +
-                "For any supplementary descriptions providing minor information about any elements, format them as a triple: [ELEMENT, \"rdfs:comment\", COMMENT]. An element may be anything described above: concepts, individuals etc.\n" +
-                "\n" +
-                "Individual assertions come last, given in the format of [INDIVIDUAL, RELATIONSHIP, INDIVIDUAL] in cases of relationships. For attribute assignments, use [INDIVIDUAL, ATTRIBUTE, VALUE].\n" +
-                "\n" +
-                "The sequence of triples should be ordered like: classes, subclasses, object properties, data properties, and then individual assertions.\n" +
-                "\n" +
-                "Note: The last triple should not have a comma after. The triples should also make sense in the general context.\n");
+        systemMessage.put("content", system_message);
         messages.put(systemMessage);
 
-//        // User message with example instructions
-//        String filePath = "src/main/resources/context";
-//        String instructions = new String(Files.readAllBytes(Paths.get(filePath)));
-//
-//        JSONObject userMessage = new JSONObject();
-//        userMessage.put("role", "user");
-//        userMessage.put("content", instructions);
-//        messages.put(userMessage);
-//        json.put("messages", messages);
 
-        JSONObject message = new JSONObject();
-        message.put("role", "user");
-        message.put("content", text);
-        messages.put(message);
+        JSONObject userMessage = new JSONObject();
+        userMessage.put("role", "user");
+        userMessage.put("content", user_message);
+        messages.put(userMessage);
 
         json.put("messages", messages);
 
@@ -175,18 +85,21 @@ public class GenerationService {
         String jsonResponseString = EntityUtils.toString(responseEntity);
         System.out.println(jsonResponseString);
         JSONObject jsonResponse = new JSONObject(jsonResponseString);
+
+
+//        System.out.println(ontology);
+
+//        FileOutputStream outputStream = new FileOutputStream("ontology.owl");
+//        outputStream.write(ontology.getBytes());
+//        outputStream.close();
+
         String ontology = jsonResponse.getJSONArray("choices")
                 .getJSONObject(0)
                 .getJSONObject("message")
                 .getString("content");
-
-
-        System.out.println(ontology);
-
-        FileOutputStream outputStream = new FileOutputStream("ontology.owl");
-        outputStream.write(ontology.getBytes());
-        outputStream.close();
-
+        if(ontology.contains("],]")){
+            ontology = ontology.replace("],]","]]");
+        }
         return ontology;
     }
 
@@ -195,12 +108,19 @@ public class GenerationService {
         OWLOntology ontology = manager.createOntology();
         OWLDataFactory factory = manager.getOWLDataFactory();
 
+//        if(!(tripletsString.contains("[[") && tripletsString.contains("]]"))){
+//            tripletsString = "["+tripletsString+"]";
+//        }
+
         JSONArray triplets = new JSONArray(tripletsString);
         for (int i = 0; i < triplets.length(); i++) {
             JSONArray triplet = triplets.getJSONArray(i);
+            if (triplet.length() != 3) {
+                continue;
+            }
             String subject = triplet.getString(0);
             String predicate = triplet.getString(1);
-            String object = triplet.getString(2);
+            String object = triplet.get(2).toString();;
 
             // Create the IRI for the subject
             IRI subjectIRI = IRI.create("#" + subject);
@@ -294,19 +214,34 @@ public class GenerationService {
                 default:
                     // The predicate is a property linking the subject and object
                     OWLNamedIndividual subjectIndividual = factory.getOWLNamedIndividual(subjectIRI);
-                    // Handle object property and data property separately
+// Handle object property and data property separately
                     if (object.startsWith("xsd:")) { // if object is a literal with datatype
                         String literal = object.substring(4); // strip "xsd:" from object
-                        OWLLiteral objectLiteral = factory.getOWLLiteral(literal, factory.getOWLDatatype(IRI.create(XSDVocabulary.INTEGER.getIRI().toString())));
-                        OWLAxiom axiom1 = factory.getOWLDataPropertyAssertionAxiom(factory.getOWLDataProperty(predicateIRI), subjectIndividual, objectLiteral);
-                        manager.addAxiom(ontology, axiom1);
+                        OWLLiteral objectLiteral;
+                        if (literal.matches("-?\\d+")) {
+                            // Handle as integer literal
+                            objectLiteral = factory.getOWLLiteral(literal, OWL2Datatype.XSD_INT);
+                        } else {
+                            // Handle as string literal
+                            objectLiteral = factory.getOWLLiteral(literal, OWL2Datatype.XSD_STRING);
+                        }
+                        OWLDataProperty dataProperty = factory.getOWLDataProperty(predicateIRI);
+                        OWLDataPropertyAssertionAxiom axiom1 = factory.getOWLDataPropertyAssertionAxiom(dataProperty, subjectIndividual, objectLiteral);
+
+                        // Manually generate XML representation for the literal
+                        OWLObjectRenderer renderer = new DLSyntaxObjectRenderer();
+                        String objectLiteralXML = renderer.render(objectLiteral);
+
+                        // Create a new OWLDataPropertyAssertionAxiom with the updated object literal XML
+                        OWLAxiom updatedAxiom1 = factory.getOWLDataPropertyAssertionAxiom(dataProperty, subjectIndividual, objectLiteralXML);
+                        manager.addAxiom(ontology, updatedAxiom1);
                     } else { // if object is an individual
                         OWLNamedIndividual objectIndividual = factory.getOWLNamedIndividual(IRI.create("#" + object));
                         OWLAxiom axiom2 = factory.getOWLObjectPropertyAssertionAxiom(factory.getOWLObjectProperty(predicateIRI), subjectIndividual, objectIndividual);
                         manager.addAxiom(ontology, axiom2);
                     }
-                    break;
 
+                    break;
             }
 
         }
@@ -314,51 +249,6 @@ public class GenerationService {
         manager.saveOntology(ontology, new RDFXMLDocumentFormat(), target);
 
         return target.toString();
-    }
-
-    public String chat(String apikey, String text) throws Exception {
-        CloseableHttpClient httpClient = HttpClients.createDefault();
-        HttpPost httpPost = new HttpPost("https://api.openai.com/v1/chat/completions");
-
-        httpPost.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-        httpPost.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + apikey);
-
-        JSONObject json = new JSONObject();
-        json.put("model", "gpt-3.5-turbo");
-
-        JSONArray messages = new JSONArray();
-
-        JSONObject message = new JSONObject();
-        message.put("role", "user");
-        message.put("content", text);
-        messages.put(message);
-
-        json.put("messages", messages);
-
-        String requestBody = json.toString();
-
-        StringEntity entity = new StringEntity(requestBody);
-        httpPost.setEntity(entity);
-
-        HttpResponse response = httpClient.execute(httpPost);
-        HttpEntity responseEntity = response.getEntity();
-
-        String jsonResponseString = EntityUtils.toString(responseEntity);
-        System.out.println(jsonResponseString);
-        JSONObject jsonResponse = new JSONObject(jsonResponseString);
-        String ontology = jsonResponse.getJSONArray("choices")
-                .getJSONObject(0)
-                .getJSONObject("message")
-                .getString("content");
-
-
-        System.out.println(ontology);
-
-        FileOutputStream outputStream = new FileOutputStream("ontology.owl");
-        outputStream.write(ontology.getBytes());
-        outputStream.close();
-
-        return ontology;
     }
 
     public static void common(String onto1, String onto2) throws OWLOntologyCreationException {

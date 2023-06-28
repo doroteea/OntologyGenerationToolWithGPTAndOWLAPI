@@ -19,7 +19,9 @@ Individual assertions should be given in the format of [INDIVIDUAL, RELATIONSHIP
 
 The sequence of triples should be ordered like: classes, subclasses, object properties, data properties, and then individual assertions. The last triple should not have a comma after it. All triples should make sense within the general context and build upon each other to form a detailed ontology of the subject matter.
 
-If an update is related to deleting an entity, provide ["DELETE", ENTITY].
+If an update is related to deleting an entity, provide ["DELETE", CONCEPT or INDIVIDUAL].
+
+If an update is related to a color, provide [ENTITY, COLOR]. Color is in hex format.
 
 Note: The last triplet should not have a comma.
 

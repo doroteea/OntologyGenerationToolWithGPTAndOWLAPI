@@ -111,7 +111,7 @@ response:
     <rdfs:domain rdf:resource="#Patients"/>
     <rdfs:range rdf:resource="#RiskFactorControl"/>
   </owl:ObjectProperty>
-
+65
   <owl:ObjectProperty rdf:about="#advisedToUseSupplements">
     <rdfs:domain rdf:resource="#Patients"/>
     <rdfs:range rdf:resource="#NutritionalSupplement"/>

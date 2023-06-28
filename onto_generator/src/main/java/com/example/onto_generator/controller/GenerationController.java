@@ -1,6 +1,7 @@
 package com.example.onto_generator.controller;
 
 import com.example.onto_generator.service.GenerationService;
+import org.springframework.aop.scope.ScopedProxyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -28,8 +29,4 @@ public class GenerationController {
         return ResponseEntity.ok(Collections.singletonList(sevice.tripleToOntology(triplets)));
     }
 
-    @PostMapping("/stateful/{apikey}")
-    public ResponseEntity<List<String>> stateful(@PathVariable String apikey, @RequestBody String prompt) throws Exception {
-        return ResponseEntity.ok(Collections.singletonList(sevice.chat(apikey, prompt)));
-    }
 }

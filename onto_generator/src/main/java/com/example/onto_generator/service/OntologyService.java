@@ -287,7 +287,6 @@ public class OntologyService {
     }
 
     public String convert(String syntax, String onto) {
-        // Set the URL of the SSNValidation service
         String conversionUrl = "https://www.ldf.fi/service/owl-converter/";
 
         HttpClient httpClient = HttpClientBuilder.create().build();

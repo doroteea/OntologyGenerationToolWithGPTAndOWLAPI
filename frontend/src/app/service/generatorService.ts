@@ -22,7 +22,6 @@ interface GraphData {
 export class GeneratorService {
   generateUrl: string = "http://localhost:8080/generate/";
   ontologyUrl: string =  "http://localhost:8080/ontology";
-  //validateUrl: string = "http://localhost:8080/validate";
   validateUrl: string = "http://localhost:8080/validator";
   loadUrl: string = "http://localhost:8080/load-ontology";
   graphUrl: string = "http://localhost:8080/graph";
@@ -32,7 +31,6 @@ export class GeneratorService {
   individualmetricsUrl: string = "http://localhost:8080/individual-axioms-metrics";
   objectmetricsUrl: string = "http://localhost:8080/object-property-metrics";
   datametricsUrl: string = "http://localhost:8080/data-property-metrics";
-
 
 constructor(private http: HttpClient) {}
 
