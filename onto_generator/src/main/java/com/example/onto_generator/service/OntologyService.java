@@ -256,6 +256,7 @@ public class OntologyService {
     }
 
     public String validateOntology(String ontology) {
+        System.out.println("validate");
         // Set the URL of the SSNValidation service
         String validationUrl = "http://iot.ee.surrey.ac.uk/SSNValidation/FormInputServlet";
 
@@ -287,6 +288,7 @@ public class OntologyService {
     }
 
     public String convert(String syntax, String onto) {
+        System.out.println("convert");
         String conversionUrl = "https://www.ldf.fi/service/owl-converter/";
 
         HttpClient httpClient = HttpClientBuilder.create().build();

@@ -20,12 +20,12 @@ public class GenerationController {
     private GenerationService sevice;
 
     @PostMapping("/generate/{apikey}")
-    public ResponseEntity<List<String>> generate(@PathVariable String apikey, @RequestBody String prompt) throws Exception {
+    public ResponseEntity<List<String>> generateTriplets(@PathVariable String apikey, @RequestBody String prompt) throws Exception {
         return ResponseEntity.ok(Collections.singletonList(sevice.gptRequest(apikey, prompt)));
     }
 
     @PostMapping("/ontology")
-    public ResponseEntity<List<String>> ontology(@RequestBody String triplets) throws Exception {
+    public ResponseEntity<List<String>> tripletsToOntology(@RequestBody String triplets) throws Exception {
         return ResponseEntity.ok(Collections.singletonList(sevice.tripleToOntology(triplets)));
     }
 

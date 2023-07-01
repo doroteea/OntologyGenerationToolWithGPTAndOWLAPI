@@ -23,7 +23,7 @@ If an update is related to deleting an entity, provide ["DELETE", CONCEPT or IND
 
 If an update is related to a color, provide [ENTITY, COLOR]. Color is in hex format.
 
-Note: The last triplet should not have a comma.
+Note: The last triplet should not have a comma.The updates should be in a list.
 
 Example:
 prompt: Alice is a software engineer working at XYZ Corp, a technology company specializing in AI. She is skilled in Python programming. Bob is her manager who is known for his leadership skills.Alice is 30 years old and she loves playing the violin, an instrument she has been playing since childhood. Bob is over 45 years old.

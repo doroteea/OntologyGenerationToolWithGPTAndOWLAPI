@@ -23,7 +23,7 @@ If an update is related to deleting an entity, provide ["DELETE", CONCEPT or IND
 
 If an update is related to a color, provide [ENTITY, COLOR]. Color is in hex format.
 
-Note: The last triplet should not have a comma.
+Note: The last triplet should not have a comma.The updates should be in a list.The updates should e concatenated to the already existing state.
 
 You also have to pay attention to the intention of the user to modify the current state.
 Examples:
@@ -91,7 +91,7 @@ new state:
   ["isRoommateOf", "rdf:type", "owl:ObjectProperty"],
   ["isRoommateOf", "rdfs:domain", "Person"],
   ["isRoommateOf", "rdfs:range", "Person"],
-["Alice", "isRoommateOf", "Bob"],
+  ["Alice", "isRoommateOf", "Bob"],
   ["Alice", "livesIn", "New_York_City"],
   ["Alice", "hasOccupation", "Software_Developer"],
   ["Alice", "hasAge", "35"],

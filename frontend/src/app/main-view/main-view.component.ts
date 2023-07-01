@@ -1,13 +1,9 @@
-import {Component, ElementRef, HostListener, Input, OnInit, ViewChild} from '@angular/core';
+import {Component, ElementRef, Input, OnInit, ViewChild} from '@angular/core';
 
 import * as cytoscape from 'cytoscape';
-
-import { Router } from '@angular/router';
-import { Location } from '@angular/common';
 import {GeneratorService} from '../service/generatorService';
 import {HttpClient} from "@angular/common/http";
 import { saveAs } from 'file-saver';
-import { AfterViewChecked } from '@angular/core';
 import {BaseMetrics} from "../model/BaseMetrics";
 import {ClassAxiomsMetrics} from "../model/ClassAxiomsMetrics";
 import {ObjectPropertyAxiomsMetrics} from "../model/ObjectPropertyAxiomsMetrics";
@@ -54,13 +50,11 @@ export class MainViewComponent implements OnInit {
 
 //triplets
   ontology_list! : any[];
-  kg_list! : any[];
-  rdfs_list! : any[];
+  updates_list! : any[];
   apiKey = "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";
   SELECTED_PROMPT = "STATELESS";
 
   prompt = '';
-
   buttonClass = '';
   buttonText = '';
 
@@ -68,17 +62,41 @@ export class MainViewComponent implements OnInit {
     this.SELECTED_PROMPT = "STATELESS";
     this.buttonClass = 'button';
     this.buttonText = 'RDF Schema';
-    this.initializeCy();
-    this.convert();
+    this.selectedOntologySyntax = this.ontologyFormatsConverted[0];
   }
 
-  initializeCy() {
-    this.cy = cytoscape({
-      container: document.getElementById('cy'),
-      elements: {
-        nodes: this.graphState.nodes,
-        edges: this.graphState.edges,
-      },
+  convert(syntax: string) {
+    console.log("here bish");
+    console.log(syntax);
+    let formattedSyntax: string;
+    switch (syntax) {
+      case 'OWL':
+        formattedSyntax = 'owl';
+        break;
+      case 'RDF':
+        formattedSyntax = 'rdf';
+        break;
+      case 'TURTLE':
+        formattedSyntax = 'ttl';
+        break;
+      case 'Manchester Syntax':
+        formattedSyntax = 'ms';
+        break;
+      case 'Functional Syntax':
+        formattedSyntax = 'fs';
+        break;
+      case 'KRSS2':
+        formattedSyntax = 'krss2';
+        break;
+      default:
+        formattedSyntax = 'txt';
+        break;
+    }
+    console.log(formattedSyntax);
+    this.service.convertOntology(formattedSyntax, this.onto).subscribe((data: any) => {
+      console.log(data);
+      console.log(data[0]);
+      this.converted = data[0];
     });
   }
 
@@ -115,17 +133,30 @@ export class MainViewComponent implements OnInit {
   }
 
   updateCystoGraph() {
-    if(this.buttonText == "RDF Schema"){
-      console.log("rdf graph"+ this.graphStateRDF);
+    let filteredEdges;
+    if (this.buttonText == "RDF Schema") {
+      //  console.log("rdf graph"+ this.graphStateRDF);
+      // @ts-ignore
+
+// Filter and map the graphState
+      let filteredEdges = this.graphState.edges.filter(edge => !edge.label.includes('rdf'));
+      // @ts-ignore
+      let nodeIds = new Set(filteredEdges.flatMap(edge => [edge.from, edge.to]));
+      // @ts-ignore
+      let elements = [
+        ...this.graphState.nodes
+          // @ts-ignore
+          .filter(node => nodeIds.has(node.id))
+          // @ts-ignore
+          .map(node => ({ data: { id: node.id, label: node.label, color: node.color } })),
+        ...filteredEdges
+          // @ts-ignore
+          .map(edge => ({ data: { id: 'e' + edge.from + '-' + edge.to, source: edge.from, target: edge.to, label: edge.label } })),
+      ];
       // @ts-ignore
       this.cy = cytoscape({
         container: document.getElementById('cy'),
-        elements: [
-          // @ts-ignore
-          ...(this.graphStateRDF.nodes.map(node => ({ data: { id: node.id, label: node.label, color: node.color } }))),
-          // @ts-ignore
-          ...(this.graphStateRDF.edges.map(edge => ({ data: { id: edge.id, source: edge.from, target: edge.to, label: edge.label } })))
-        ],
+        elements: elements,
         style: [
           {
             selector: 'node',
@@ -159,9 +190,20 @@ export class MainViewComponent implements OnInit {
         container: document.getElementById('cy'),
         elements: [
           // @ts-ignore
-          ...(this.graphState.nodes.map(node => ({ data: { id: node.id, label: node.label, color: node.color } }))),
+          ...(this.graphState.nodes.map(node => ({data: {id: node.id, label: node.label, color: node.color}}))),
           // @ts-ignore
-          ...(this.graphState.edges.map(edge => ({ data: { id: edge.id, source: edge.from, target: edge.to, label: edge.label } })))
+          ...(this.graphState.edges.map(edge => ({
+            data: {
+              // @ts-ignore
+              id: edge.id,
+              // @ts-ignore
+              source: edge.from,
+              // @ts-ignore
+              target: edge.to,
+              // @ts-ignore
+              label: edge.label
+            }
+          })))
         ],
         style: [
           {
@@ -193,7 +235,7 @@ export class MainViewComponent implements OnInit {
 
   updateGraph(updates: any[]) {
     let current_graph = JSON.parse(JSON.stringify(this.graphState));
-    let current_graph_rdf = JSON.parse(JSON.stringify(this.graphStateRDF));
+    //let current_graph_rdf = JSON.parse(JSON.stringify(this.graphStateRDF));
 
     if (updates.length === 0) {
       return;
@@ -230,24 +272,24 @@ export class MainViewComponent implements OnInit {
 
         current_graph.edges.push({ from: entity1, to: entity2, label: relation});
 
-        // Update RDF-specific graph state
-        if (this.buttonText === "RDF Schema") {
-          if (node1 === undefined) {
-            current_graph_rdf.nodes.push({ id: entity1, label: entity1, color: "#6495ed"});
-          }
-
-          if (node2 === undefined) {
-            current_graph_rdf.nodes.push({ id: entity2, label: entity2, color: "#6495ed"});
-          }
-
-          let edgeRDF = current_graph_rdf.edges.find((edge: { from: any; to: any; }) => edge.from === entity1 && edge.to === entity2);
-          if (edgeRDF !== undefined) {
-            edgeRDF.label = relation;
-            return;
-          }
-
-          current_graph_rdf.edges.push({ from: entity1, to: entity2, label: relation});
-        }
+        // // Update RDF-specific graph state
+        // if (this.buttonText === "RDF Schema") {
+        //   if (node1 === undefined) {
+        //     current_graph_rdf.nodes.push({ id: entity1, label: entity1, color: "#6495ed"});
+        //   }
+        //
+        //   if (node2 === undefined) {
+        //     current_graph_rdf.nodes.push({ id: entity2, label: entity2, color: "#6495ed"});
+        //   }
+        //
+        //   let edgeRDF = current_graph_rdf.edges.find((edge: { from: any; to: any; }) => edge.from === entity1 && edge.to === entity2);
+        //   if (edgeRDF !== undefined) {
+        //     edgeRDF.label = relation;
+        //     return;
+        //   }
+        //
+        //   current_graph_rdf.edges.push({ from: entity1, to: entity2, label: relation});
+        // }
       }
       else if (update.length === 2 && update[1].startsWith("#")) {
 
@@ -261,12 +303,12 @@ export class MainViewComponent implements OnInit {
           return;
         }
 
-        var node1 = current_graph_rdf.nodes.find((node: { id: any; }) => node.id === entity);
-
-        if (node1 === undefined) {
-          current_graph_rdf.nodes.push({id: entity, label: entity, color: color});
-          return;
-        }
+        // var node1 = current_graph_rdf.nodes.find((node: { id: any; }) => node.id === entity);
+        //
+        // if (node1 === undefined) {
+        //   current_graph_rdf.nodes.push({id: entity, label: entity, color: color});
+        //   return;
+        // }
 
         // update the color of the node
         node.color = color;
@@ -285,22 +327,22 @@ export class MainViewComponent implements OnInit {
         current_graph.edges = current_graph.edges.filter((edge: { from: any; to: any; }) => edge.from !== index && edge.to !== index);
 
         // Update RDF-specific graph state
-        if (this.buttonText === "RDF Schema") {
-          current_graph_rdf.nodes = current_graph_rdf.nodes.filter((node: { id: any; }) => node.id !== index);
-          current_graph_rdf.edges = current_graph_rdf.edges.filter((edge: { from: any; to: any; }) => edge.from !== index && edge.to !== index);
-        } else {
-          // Delete from RDF-specific graph state if index is found
-          let nodeRDF = current_graph_rdf.nodes.find((node: { id: any; }) => node.id === index);
-          if (nodeRDF !== undefined) {
-            current_graph_rdf.nodes = current_graph_rdf.nodes.filter((node: { id: any; }) => node.id !== index);
-            current_graph_rdf.edges = current_graph_rdf.edges.filter((edge: { from: any; to: any; }) => edge.from !== index && edge.to !== index);
-          }
-        }
+        // if (this.buttonText === "RDF Schema") {
+        //   current_graph_rdf.nodes = current_graph_rdf.nodes.filter((node: { id: any; }) => node.id !== index);
+        //   current_graph_rdf.edges = current_graph_rdf.edges.filter((edge: { from: any; to: any; }) => edge.from !== index && edge.to !== index);
+        // } else {
+        //   // Delete from RDF-specific graph state if index is found
+        //   let nodeRDF = current_graph_rdf.nodes.find((node: { id: any; }) => node.id === index);
+        //   if (nodeRDF !== undefined) {
+        //     current_graph_rdf.nodes = current_graph_rdf.nodes.filter((node: { id: any; }) => node.id !== index);
+        //     current_graph_rdf.edges = current_graph_rdf.edges.filter((edge: { from: any; to: any; }) => edge.from !== index && edge.to !== index);
+        //   }
+       // }
       }
     });
 
     this.graphState = current_graph;
-    this.graphStateRDF = current_graph_rdf;
+   // this.graphStateRDF = current_graph_rdf;
 
     this.updateCystoGraph();
 
@@ -336,14 +378,6 @@ export class MainViewComponent implements OnInit {
   window.open(url, '_blank');
 }
 
-  validateOntology() {
-    if (this.onto) {
-      this.service.validateOntology(this.onto).subscribe((data: any) => {
-        alert(data);
-      });
-    }
-  }
-
   async stateless(prompt: string, apiKey: string) {
     try {
       const response = await this.httpClient.get('assets/prompt/stateless.prompt', { responseType: 'text' }).toPromise();
@@ -355,7 +389,7 @@ export class MainViewComponent implements OnInit {
         this.ontology_list = data;
         if (data.length > 0) {
           const updates = JSON.parse(data[0]);
-          this.kg_list = updates;
+          this.updates_list = updates;
           this.updateGraph(updates);
           this.SELECTED_PROMPT = "STATEFUL";
         } else {
@@ -398,8 +432,9 @@ export class MainViewComponent implements OnInit {
       this.service.generateOntology(apiKey, promptText).subscribe((data: any[]) => {
         this.ontology_list = data;
         if (data.length > 0) {
+          console.log(data);
           const updates = JSON.parse(data[0]);
-          this.kg_list = updates;
+          this.updates_list = updates;
           this.updateGraph(updates);
         } else {
           console.error('Invalid data format');
@@ -448,9 +483,9 @@ export class MainViewComponent implements OnInit {
     };
     this.SELECTED_PROMPT = "STATELESS";
 
-    this.graphStateRDF = this.graphState;
+   // this.graphStateRDF = this.graphState;
 
-    this.kg_list = [];
+    this.updates_list = [];
     this.ontology_list = [];
 
     this.updateGraph([]);
@@ -526,56 +561,22 @@ export class MainViewComponent implements OnInit {
   }
 
   formatValidationReport(report: string): string {
-    const statements = report.split("On statement: ");
-    let formattedReport = "";
+    if (report.includes("On statement: ")){
+      const statements = report.split("On statement: ");
+      let formattedReport = "";
 
-    for (const statement of statements.slice(1)) {
-      const [subject, predicate, ignored1, objectValue, ignored2] = statement.split(" ");
+      for (const statement of statements.slice(1)) {
+        const [subject, predicate, ignored1, objectValue, ignored2] = statement.split(" ");
 
-      const formattedStatement = `${subject} ${predicate}: ${objectValue}\n`;
-      formattedReport += formattedStatement;
+        const formattedStatement = `${subject} ${predicate}: ${objectValue}\n`;
+        formattedReport += formattedStatement;
+      }
+
+      return formattedReport.trim();
+    } else {
+      return report;
     }
 
-    return formattedReport.trim();
-  }
-
-  convert(){
-    const dropdown = document.getElementById("dropdown") as HTMLSelectElement;
-    dropdown.addEventListener("change", (event) => {
-      // @ts-ignore
-      this.selectedOntologySyntax = event.target.value;
-      console.log(this.selectedOntologySyntax);
-      let syntax!: string;
-      switch (this.selectedOntologySyntax) {
-        case 'OWL':
-          syntax = 'owl';
-          break;
-        case 'RDF':
-          syntax = 'rdf';
-          break;
-        case 'TURTLE':
-          syntax = 'ttl';
-          break;
-        case 'Manchester Syntax':
-          syntax = 'ms';
-          break;
-        case 'Functional Syntax':
-          syntax = 'fs';
-          break;
-        case 'KRSS2':
-          syntax = 'krss2';
-          break;
-        default:
-          syntax = 'txt';
-          break;
-      }
-      console.log(syntax);
-      this.service.convertOntology(syntax, this.onto).subscribe((data: any) => {
-        console.log(data);
-        console.log(data[0]);
-        this.converted = data[0];
-      });
-    });
   }
 
   downloadFile() {
@@ -610,13 +611,13 @@ export class MainViewComponent implements OnInit {
   }
 
   graphState = { nodes: [], edges: [] };
-  graphStateRDF = { nodes: [], edges: [] };
+ //graphStateRDF = { nodes: [], edges: [] };
 
   changeGraph() {
     this.buttonClass = this.buttonClass === 'button' ? 'button_secundar' : 'button';
     this.buttonText = this.buttonText === 'RDF Schema' ? 'Knowledge Schema' : 'RDF Schema';
 
-    this.updateGraph(this.kg_list);
+    this.updateGraph(this.updates_list);
 
     document.body.style.cursor = "auto";
   }

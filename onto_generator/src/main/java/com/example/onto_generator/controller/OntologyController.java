@@ -33,22 +33,8 @@ import java.util.List;
 @Controller
 @CrossOrigin(origins = {"http://localhost:4200"})
 public class OntologyController {
-
     @Autowired
     private OntologyService ontologyService;
-
-    @CrossOrigin(origins = "http://localhost:4200")
-    @PostMapping("/graph")
-    public ResponseEntity<?> getOntologyGraph(@RequestBody String onto) {
-        System.out.println("loaded: " + onto);
-        return ResponseEntity.ok(ontologyService.getGraph(onto));
-    }
-
-    @CrossOrigin(origins = "http://localhost:4200")
-    @PostMapping("/validate")
-    public ResponseEntity<List<String>> validate(@RequestBody String onto) {
-        return ResponseEntity.ok(Collections.singletonList(validateOntology(onto)));
-    }
 
     @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/convert/{syntax}")
@@ -60,44 +46,6 @@ public class OntologyController {
     @PostMapping("/validator")
     public ResponseEntity<List<String>> validator(@RequestBody String onto) throws OWLOntologyCreationException {
         return ResponseEntity.ok(Collections.singletonList(ontologyService.validateOntology(onto)));
-    }
-
-    public String validateOntology(String onto) {
-        OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
-        OWLOntology ontology;
-        try {
-            StringDocumentSource documentSource = new StringDocumentSource(onto);
-            OWLOntologyLoaderConfiguration configuration = new OWLOntologyLoaderConfiguration()
-                    .setLoadAnnotationAxioms(true);
-
-            ontology = manager.loadOntologyFromOntologyDocument(documentSource, configuration);
-
-        } catch (OWLOntologyCreationException e) {
-            return "Could not parse ontology";
-        }
-
-        // Create a structural reasoner to validate the ontology
-        OWLReasonerFactory reasonerFactory = new StructuralReasonerFactory();
-        OWLReasoner reasoner = reasonerFactory.createReasoner(ontology);
-
-        // Check if the ontology is consistent
-        if (!reasoner.isConsistent()) {
-            System.err.println("Ontology is inconsistent!");
-            return "Ontology is inconsistent!";
-        }
-
-        // Check if there are any unsatisfiable classes
-        if (reasoner.isSatisfiable(ontology.getOWLOntologyManager().getOWLDataFactory().getOWLNothing())) {
-            System.err.println("There are unsatisfiable classes in the ontology!");
-            List<String> errors = new ArrayList<>();
-            for (OWLClass cls : reasoner.getUnsatisfiableClasses().getEntitiesMinusBottom()) {
-                errors.add(cls.getIRI().toString());
-            }
-            return errors.toString();
-        }
-
-        // The ontology is valid
-        return "Ontology is valid!";
     }
 
 }

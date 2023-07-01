@@ -73,10 +73,13 @@
             <h1>
               Convert Ontology Syntax
             </h1>
-            <select id="dropdown">
+            <select #dropdown [(ngModel)]="selectedOntologySyntax" (change)="convert(selectedOntologySyntax)">
               <option *ngFor="let syntax of ontologyFormatsConverted">{{syntax}}</option>
             </select>
-            <pre class="prettyprint linenums ontology-container" [contentEditable]="true"><code>{{converted}}</code></pre>
+            <pre class="prettyprint linenums ontology-container" [contentEditable]="true">
+    <code>{{converted}}</code>
+</pre>
+
           </div>
           <div *ngSwitchCase="'4'">
             <h1>Metrics on Ontology</h1>
