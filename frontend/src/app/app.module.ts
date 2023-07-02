@@ -8,6 +8,7 @@ import {HttpClientModule} from "@angular/common/http";
 import {RouterModule} from "@angular/router";
 import {CommonModule} from "@angular/common";
 import { HighlightModule, HIGHLIGHT_OPTIONS } from 'ngx-highlightjs';
+import {FormsModule} from "@angular/forms";
 
 @NgModule({
   declarations: [
@@ -15,15 +16,16 @@ import { HighlightModule, HIGHLIGHT_OPTIONS } from 'ngx-highlightjs';
     MainViewComponent,
     RoutingComponents
   ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule,
-    HttpClientModule,
-    CommonModule,
-    RouterModule,
-    BrowserModule,
-    HighlightModule,
-  ],
+    imports: [
+        BrowserModule,
+        AppRoutingModule,
+        HttpClientModule,
+        CommonModule,
+        RouterModule,
+        BrowserModule,
+        HighlightModule,
+        FormsModule,
+    ],
   providers: [{
     provide: HIGHLIGHT_OPTIONS,
     useValue: {

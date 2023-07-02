@@ -1,7 +1,6 @@
 package com.example.onto_generator.controller;
 
 import com.example.onto_generator.service.GenerationService;
-import org.springframework.aop.scope.ScopedProxyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -17,16 +16,16 @@ import java.util.List;
 @CrossOrigin(origins = {"http://localhost:4200"})
 public class GenerationController {
     @Autowired
-    private GenerationService sevice;
+    private GenerationService generationService;
 
     @PostMapping("/generate/{apikey}")
     public ResponseEntity<List<String>> generateTriplets(@PathVariable String apikey, @RequestBody String prompt) throws Exception {
-        return ResponseEntity.ok(Collections.singletonList(sevice.gptRequest(apikey, prompt)));
+        return ResponseEntity.ok(Collections.singletonList(generationService.gptRequest(apikey, prompt)));
     }
 
     @PostMapping("/ontology")
     public ResponseEntity<List<String>> tripletsToOntology(@RequestBody String triplets) throws Exception {
-        return ResponseEntity.ok(Collections.singletonList(sevice.tripleToOntology(triplets)));
+        return ResponseEntity.ok(Collections.singletonList(generationService.tripleToOntology(triplets)));
     }
 
 }

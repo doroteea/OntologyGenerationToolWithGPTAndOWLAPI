@@ -1,23 +1,7 @@
 package com.example.onto_generator.controller;
 
 import com.example.onto_generator.service.OntologyService;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.semanticweb.owlapi.apibinding.OWLManager;
-import org.semanticweb.owlapi.io.StringDocumentSource;
-import org.semanticweb.owlapi.model.*;
-import org.semanticweb.owlapi.reasoner.OWLReasoner;
-import org.semanticweb.owlapi.reasoner.OWLReasonerFactory;
-import org.semanticweb.owlapi.reasoner.structural.StructuralReasonerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -25,8 +9,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import java.io.FileOutputStream;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -38,14 +20,14 @@ public class OntologyController {
 
     @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/convert/{syntax}")
-    public ResponseEntity<List<String>> convert(@PathVariable String syntax, @RequestBody String onto) {
-        return ResponseEntity.ok(Collections.singletonList(ontologyService.convert(syntax, onto)));
+    public ResponseEntity<List<String>> convert(@PathVariable String syntax, @RequestBody String ontology) {
+        return ResponseEntity.ok(Collections.singletonList(ontologyService.convert(syntax, ontology)));
     }
 
     @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/validator")
-    public ResponseEntity<List<String>> validator(@RequestBody String onto) throws OWLOntologyCreationException {
-        return ResponseEntity.ok(Collections.singletonList(ontologyService.validateOntology(onto)));
+    public ResponseEntity<List<String>> validator(@RequestBody String ontology) {
+        return ResponseEntity.ok(Collections.singletonList(ontologyService.validateOntology(ontology)));
     }
 
 }

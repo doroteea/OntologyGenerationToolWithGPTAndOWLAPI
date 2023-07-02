@@ -10,103 +10,74 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.semanticweb.HermiT.Reasoner;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.dlsyntax.renderer.DLSyntaxObjectRenderer;
 import org.semanticweb.owlapi.formats.RDFXMLDocumentFormat;
 import org.semanticweb.owlapi.io.OWLObjectRenderer;
-import org.semanticweb.owlapi.io.OWLOntologyDocumentTarget;
-import org.semanticweb.owlapi.io.StreamDocumentTarget;
 import org.semanticweb.owlapi.io.StringDocumentTarget;
 import org.semanticweb.owlapi.model.*;
-import org.semanticweb.owlapi.reasoner.OWLReasoner;
-import org.semanticweb.owlapi.reasoner.OWLReasonerFactory;
-import org.semanticweb.owlapi.reasoner.structural.StructuralReasonerFactory;
 import org.semanticweb.owlapi.vocab.OWL2Datatype;
 import org.semanticweb.owlapi.vocab.XSDVocabulary;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
 public class GenerationService {
 
     public String gptRequest(String apikey, String text) throws Exception {
-        CloseableHttpClient httpClient = HttpClients.createDefault();
-        HttpPost httpPost = new HttpPost("https://api.openai.com/v1/chat/completions");
-
-        httpPost.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-        httpPost.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + apikey);
-
+        CloseableHttpClient client = HttpClients.createDefault();
+        HttpPost post = new HttpPost("https://api.openai.com/v1/chat/completions");
+        post.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+        post.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + apikey);
         JSONObject json = new JSONObject();
         json.put("model", "gpt-3.5-turbo");
 
 
-        int firstPromptIndex = text.indexOf("prompt:");//index 1st occurence
-        int secondPromptIndex = text.indexOf("prompt:", firstPromptIndex + 1);//index 2nd occurence
-
+        int firstPromptIndex = text.indexOf("prompt:");
+        int secondPromptIndex = text.indexOf("prompt:", firstPromptIndex + 1);
         String system_message = text.substring(0, secondPromptIndex);
         String user_message = text.substring(secondPromptIndex);
-
         system_message = system_message.trim();
         user_message = user_message.trim();
 
         JSONArray messages = new JSONArray();
-
-        JSONObject systemMessage = new JSONObject();
-        systemMessage.put("role", "system");
-        systemMessage.put("content", system_message);
-        messages.put(systemMessage);
-
-
-        JSONObject userMessage = new JSONObject();
-        userMessage.put("role", "user");
-        userMessage.put("content", user_message);
-        messages.put(userMessage);
-
+        JSONObject sysMsg = new JSONObject();
+        sysMsg.put("role", "system");
+        sysMsg.put("content", system_message);
+        messages.put(sysMsg);
+        JSONObject usrMsg = new JSONObject();
+        usrMsg.put("role", "user");
+        usrMsg.put("content", user_message);
+        messages.put(usrMsg);
         json.put("messages", messages);
 
         String requestBody = json.toString();
-
         StringEntity entity = new StringEntity(requestBody);
-        httpPost.setEntity(entity);
-
-        HttpResponse response = httpClient.execute(httpPost);
+        post.setEntity(entity);
+        HttpResponse response = client.execute(post);
         HttpEntity responseEntity = response.getEntity();
 
         String jsonResponseString = EntityUtils.toString(responseEntity);
         System.out.println(jsonResponseString);
         JSONObject jsonResponse = new JSONObject(jsonResponseString);
 
-
-//        System.out.println(ontology);
-
-//        FileOutputStream outputStream = new FileOutputStream("ontology.owl");
-//        outputStream.write(ontology.getBytes());
-//        outputStream.close();
-
         String ontology = jsonResponse.getJSONArray("choices")
                 .getJSONObject(0)
                 .getJSONObject("message")
                 .getString("content");
-        if(ontology.contains("],]")){
-            ontology = ontology.replace("],]","]]");
+        if (ontology.contains("],]")) {
+            ontology = ontology.replace("],]", "]]");
         }
         return ontology;
     }
 
     public String tripleToOntology(String tripletsString) throws OWLOntologyCreationException, OWLOntologyStorageException {
-        OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
-        OWLOntology ontology = manager.createOntology();
-        OWLDataFactory factory = manager.getOWLDataFactory();
+        OWLOntologyManager owlOntologyManager = OWLManager.createOWLOntologyManager();
+        OWLOntology ontology = owlOntologyManager.createOntology();
+        OWLDataFactory dataFactory = owlOntologyManager.getOWLDataFactory();
 
 //        if(!(tripletsString.contains("[[") && tripletsString.contains("]]"))){
 //            tripletsString = "["+tripletsString+"]";
@@ -118,472 +89,137 @@ public class GenerationService {
             if (triplet.length() != 3) {
                 continue;
             }
-            String subject = triplet.getString(0);
-            String predicate = triplet.getString(1);
-            String object = triplet.get(2).toString();;
+            String triple_subject = triplet.getString(0);
+            String triple_predicate = triplet.getString(1);
+            String triple_object = triplet.get(2).toString();
 
-            // Create the IRI for the subject
-            IRI subjectIRI = IRI.create("#" + subject);
-            IRI predicateIRI = IRI.create("#" + predicate);
-            // Decide what to do based on the predicate
-            switch (predicate) {
+            IRI subjectIRI = IRI.create("#" + triple_subject);
+            IRI predicateIRI = IRI.create("#" + triple_predicate);
+            IRI objectIRI = IRI.create("#" + triple_object);
+            switch (triple_predicate) {
                 case "rdf:type":
-                    switch (object) {
-                        case "owl:Class":
-                            // The subject is a class
-                            OWLClass subjectClass = factory.getOWLClass(subjectIRI);
-                            OWLAxiom axiom = factory.getOWLDeclarationAxiom(subjectClass);
-                            manager.addAxiom(ontology, axiom);
-                            break;
-                        case "owl:ObjectProperty":
-                            // The subject is an object property
-                            OWLObjectProperty subjectObjProperty = factory.getOWLObjectProperty(subjectIRI);
-                            axiom = factory.getOWLDeclarationAxiom(subjectObjProperty);
-                            manager.addAxiom(ontology, axiom);
-                            break;
-                        case "owl:DatatypeProperty":
-                            // The subject is a datatype property
-                            OWLDataProperty subjectDataProperty = factory.getOWLDataProperty(subjectIRI);
-                            axiom = factory.getOWLDeclarationAxiom(subjectDataProperty);
-                            manager.addAxiom(ontology, axiom);
-                            break;
-                        default:
-                            // The subject is an individual of the object class
-                            OWLClass objectClass = factory.getOWLClass(IRI.create("#" + object));
-                            OWLNamedIndividual subjectIndividual = factory.getOWLNamedIndividual(subjectIRI);
-                            axiom = factory.getOWLClassAssertionAxiom(objectClass, subjectIndividual);
-                            manager.addAxiom(ontology, axiom);
-                            break;
-                    }
+                        if(Objects.equals(triple_object, "owl:Class")){
+                            OWLClass subjectClass = dataFactory.getOWLClass(subjectIRI);
+                            OWLAxiom class_axiom = dataFactory.getOWLDeclarationAxiom(subjectClass);
+                            owlOntologyManager.addAxiom(ontology, class_axiom);
+                        } else if (Objects.equals(triple_object, "owl:ObjectProperty")){
+                            OWLObjectProperty subjectObjProperty = dataFactory.getOWLObjectProperty(subjectIRI);
+                            OWLAxiom object_property_axiom = dataFactory.getOWLDeclarationAxiom(subjectObjProperty);
+                            owlOntologyManager.addAxiom(ontology, object_property_axiom);
+                        } else if (Objects.equals(triple_object, "owl:DatatypeProperty")){
+                            OWLDataProperty subjectDataProperty = dataFactory.getOWLDataProperty(subjectIRI);
+                            OWLAxiom data_property_axiom = dataFactory.getOWLDeclarationAxiom(subjectDataProperty);
+                            owlOntologyManager.addAxiom(ontology, data_property_axiom);
+                        } else {
+                            OWLClass objectClass = dataFactory.getOWLClass(objectIRI);
+                            OWLNamedIndividual subjectIndividual = dataFactory.getOWLNamedIndividual(subjectIRI);
+                            OWLAxiom individual_axiom = dataFactory.getOWLClassAssertionAxiom(objectClass, subjectIndividual);
+                            owlOntologyManager.addAxiom(ontology, individual_axiom);
+                        }
                     break;
                 case "rdfs:subClassOf":
-                    // The object is a superclass of the subject
-                    OWLClass superclass = factory.getOWLClass(IRI.create("#" + object));
-                    OWLClass subclass = factory.getOWLClass(subjectIRI);
-                    OWLAxiom axiom = factory.getOWLSubClassOfAxiom(subclass, superclass);
-                    manager.addAxiom(ontology, axiom);
+                    OWLClass superClass = dataFactory.getOWLClass(objectIRI);
+                    OWLClass subClass = dataFactory.getOWLClass(subjectIRI);
+                    OWLAxiom axiom = dataFactory.getOWLSubClassOfAxiom(subClass, superClass);
+                    owlOntologyManager.addAxiom(ontology, axiom);
                     break;
                 case "rdfs:domain":
-                    // The object is the domain of the subject property
-                    OWLClass domain = factory.getOWLClass(IRI.create("#" + object));
-
+                    OWLClass domain = dataFactory.getOWLClass(objectIRI);
                     if (ontology.containsObjectPropertyInSignature(subjectIRI)) {
-                        OWLObjectProperty property = factory.getOWLObjectProperty(subjectIRI);
-                        OWLAxiom axiom1 = factory.getOWLObjectPropertyDomainAxiom(property, domain);
-                        manager.addAxiom(ontology, axiom1);
+                        OWLObjectProperty property = dataFactory.getOWLObjectProperty(subjectIRI);
+                        OWLAxiom axiom1 = dataFactory.getOWLObjectPropertyDomainAxiom(property, domain);
+                        owlOntologyManager.addAxiom(ontology, axiom1);
                     } else if (ontology.containsDataPropertyInSignature(subjectIRI)) {
-                        OWLDataProperty property = factory.getOWLDataProperty(subjectIRI);
-                        OWLAxiom axiom2 = factory.getOWLDataPropertyDomainAxiom(property, domain);
-                        manager.addAxiom(ontology, axiom2);
+                        OWLDataProperty property = dataFactory.getOWLDataProperty(subjectIRI);
+                        OWLAxiom axiom2 = dataFactory.getOWLDataPropertyDomainAxiom(property, domain);
+                        owlOntologyManager.addAxiom(ontology, axiom2);
                     }
                     break;
                 case "rdfs:range":
-                    // The object is the range of the subject property
-                    OWLObjectProperty prop = factory.getOWLObjectProperty(subjectIRI);
-                    if (object.equals("xsd:integer")) { // Handle specific case for xsd:integer
-                        OWLDatatype rangeDataType = factory.getOWLDatatype(IRI.create(XSDVocabulary.INT.getIRI().toString()));
-                        axiom = factory.getOWLDataPropertyRangeAxiom(factory.getOWLDataProperty(subjectIRI), rangeDataType);
-                    } else {
-                        OWLClass range = factory.getOWLClass(IRI.create("#" + object));
-                        axiom = factory.getOWLObjectPropertyRangeAxiom(prop, range);
+                    switch (triple_object) {
+                        case "xsd:integer" -> {
+                            OWLDatatype rangeDataType = dataFactory.getOWLDatatype(IRI.create(XSDVocabulary.INT.getIRI().toString()));
+                            axiom = dataFactory.getOWLDataPropertyRangeAxiom(dataFactory.getOWLDataProperty(subjectIRI), rangeDataType);
+                        }
+                        case "xsd:date" -> {
+                            OWLDatatype rangeDataType = dataFactory.getOWLDatatype(IRI.create(XSDVocabulary.DATE_TIME.getIRI().toString()));
+                            axiom = dataFactory.getOWLDataPropertyRangeAxiom(dataFactory.getOWLDataProperty(subjectIRI), rangeDataType);
+                        }
+                        case "xsd:float" -> {
+                            OWLDatatype rangeDataType = dataFactory.getOWLDatatype(IRI.create(XSDVocabulary.FLOAT.getIRI().toString()));
+                            axiom = dataFactory.getOWLDataPropertyRangeAxiom(dataFactory.getOWLDataProperty(subjectIRI), rangeDataType);
+                        }
+                        case "xsd:string" -> {
+                            OWLDatatype rangeDataType = dataFactory.getOWLDatatype(IRI.create(XSDVocabulary.STRING.getIRI().toString()));
+                            axiom = dataFactory.getOWLDataPropertyRangeAxiom(dataFactory.getOWLDataProperty(subjectIRI), rangeDataType);
+                        }
+                        case "xsd:boolean" -> {
+                            OWLDatatype rangeDataType = dataFactory.getOWLDatatype(IRI.create(XSDVocabulary.BOOLEAN.getIRI().toString()));
+                            axiom = dataFactory.getOWLDataPropertyRangeAxiom(dataFactory.getOWLDataProperty(subjectIRI), rangeDataType);
+                        }
+                        default -> {
+                            OWLObjectProperty objectProperty = dataFactory.getOWLObjectProperty(subjectIRI);
+                            OWLClass range = dataFactory.getOWLClass(objectIRI);
+                            axiom = dataFactory.getOWLObjectPropertyRangeAxiom(objectProperty, range);
+                        }
                     }
-                    manager.addAxiom(ontology, axiom);
+                    owlOntologyManager.addAxiom(ontology, axiom);
                     break;
                 case "rdfs:comment":
-                    // The object is a comment about the subject
-                    OWLAnnotation comment = factory.getOWLAnnotation(factory.getRDFSComment(), factory.getOWLLiteral(object));
-
+                    OWLAnnotation comment = dataFactory.getOWLAnnotation(dataFactory.getRDFSComment(), dataFactory.getOWLLiteral(triple_object));
                     OWLEntity subjectEntity;
                     if (ontology.containsClassInSignature(subjectIRI)) {
-                        // The subject is a class
-                        subjectEntity = factory.getOWLClass(subjectIRI);
+                        subjectEntity = dataFactory.getOWLClass(subjectIRI);
                     } else if (ontology.containsObjectPropertyInSignature(subjectIRI)) {
-                        // The subject is an object property
-                        subjectEntity = factory.getOWLObjectProperty(subjectIRI);
+                        subjectEntity = dataFactory.getOWLObjectProperty(subjectIRI);
                     } else if (ontology.containsDataPropertyInSignature(subjectIRI)) {
-                        // The subject is a data property
-                        subjectEntity = factory.getOWLDataProperty(subjectIRI);
+                        subjectEntity = dataFactory.getOWLDataProperty(subjectIRI);
                     } else {
-                        // The subject is an individual
-                        subjectEntity = factory.getOWLNamedIndividual(subjectIRI);
+                        subjectEntity = dataFactory.getOWLNamedIndividual(subjectIRI);
                     }
-
-                    OWLAxiom axiom3 = factory.getOWLAnnotationAssertionAxiom(subjectEntity.getIRI(), comment);
-                    manager.addAxiom(ontology, axiom3);
+                    OWLAxiom axiom3 = dataFactory.getOWLAnnotationAssertionAxiom(subjectEntity.getIRI(), comment);
+                    owlOntologyManager.addAxiom(ontology, axiom3);
                     break;
                 default:
-                    // The predicate is a property linking the subject and object
-                    OWLNamedIndividual subjectIndividual = factory.getOWLNamedIndividual(subjectIRI);
-// Handle object property and data property separately
-                    if (object.startsWith("xsd:")) { // if object is a literal with datatype
-                        String literal = object.substring(4); // strip "xsd:" from object
+                    OWLNamedIndividual subjectIndividual = dataFactory.getOWLNamedIndividual(subjectIRI);
+                    if (triple_object.startsWith("xsd:")) {
+                        String literal = triple_object.substring(4);
                         OWLLiteral objectLiteral;
-                        if (literal.matches("-?\\d+")) {
-                            // Handle as integer literal
-                            objectLiteral = factory.getOWLLiteral(literal, OWL2Datatype.XSD_INT);
+                        String integer_regex = "-?\\d+";
+                        String float_regex = "-?\\d+(\\.\\d+)?";
+                        String date_regex = "\\d{4}-\\d{2}-\\d{2}";
+                        if (literal.matches(integer_regex)) {
+                            objectLiteral = dataFactory.getOWLLiteral(literal, OWL2Datatype.XSD_INT);
+                        } else if (literal.matches(float_regex)) {
+                            objectLiteral = dataFactory.getOWLLiteral(literal, OWL2Datatype.XSD_FLOAT);
+                        } else if (literal.matches(date_regex)) {
+                            objectLiteral = dataFactory.getOWLLiteral(literal, OWL2Datatype.XSD_DATE_TIME);
+                        } else if (literal.matches("true|false")) {
+                            objectLiteral = dataFactory.getOWLLiteral(literal, OWL2Datatype.XSD_BOOLEAN);
                         } else {
-                            // Handle as string literal
-                            objectLiteral = factory.getOWLLiteral(literal, OWL2Datatype.XSD_STRING);
+                            objectLiteral = dataFactory.getOWLLiteral(literal, OWL2Datatype.XSD_STRING);
                         }
-                        OWLDataProperty dataProperty = factory.getOWLDataProperty(predicateIRI);
-                        OWLDataPropertyAssertionAxiom axiom1 = factory.getOWLDataPropertyAssertionAxiom(dataProperty, subjectIndividual, objectLiteral);
 
-                        // Manually generate XML representation for the literal
+                        OWLDataProperty dataProperty = dataFactory.getOWLDataProperty(predicateIRI);
                         OWLObjectRenderer renderer = new DLSyntaxObjectRenderer();
                         String objectLiteralXML = renderer.render(objectLiteral);
 
-                        // Create a new OWLDataPropertyAssertionAxiom with the updated object literal XML
-                        OWLAxiom updatedAxiom1 = factory.getOWLDataPropertyAssertionAxiom(dataProperty, subjectIndividual, objectLiteralXML);
-                        manager.addAxiom(ontology, updatedAxiom1);
-                    } else { // if object is an individual
-                        OWLNamedIndividual objectIndividual = factory.getOWLNamedIndividual(IRI.create("#" + object));
-                        OWLAxiom axiom2 = factory.getOWLObjectPropertyAssertionAxiom(factory.getOWLObjectProperty(predicateIRI), subjectIndividual, objectIndividual);
-                        manager.addAxiom(ontology, axiom2);
+                        OWLAxiom axiom1 = dataFactory.getOWLDataPropertyAssertionAxiom(dataProperty, subjectIndividual, objectLiteralXML);
+                        owlOntologyManager.addAxiom(ontology, axiom1);
                     }
-
+                    else
+                    {
+                        OWLNamedIndividual individual = dataFactory.getOWLNamedIndividual(objectIRI);
+                        OWLAxiom axiom2 = dataFactory.getOWLObjectPropertyAssertionAxiom(dataFactory.getOWLObjectProperty(predicateIRI), subjectIndividual, individual);
+                        owlOntologyManager.addAxiom(ontology, axiom2);
+                    }
                     break;
             }
 
         }
         StringDocumentTarget target = new StringDocumentTarget();
-        manager.saveOntology(ontology, new RDFXMLDocumentFormat(), target);
+        owlOntologyManager.saveOntology(ontology, new RDFXMLDocumentFormat(), target);
 
         return target.toString();
-    }
-
-    public static void common(String onto1, String onto2) throws OWLOntologyCreationException {
-        OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
-        OWLOntology ontology1;
-        OWLOntology ontology2;
-
-        // Load ontology 1
-        InputStream inStream1 = new ByteArrayInputStream(onto1.getBytes(StandardCharsets.UTF_8));
-        ontology1 = manager.loadOntologyFromOntologyDocument(inStream1);
-
-        // Load ontology 2
-        InputStream inStream2 = new ByteArrayInputStream(onto2.getBytes(StandardCharsets.UTF_8));
-        ontology2 = manager.loadOntologyFromOntologyDocument(inStream2);
-
-        // Get common classes
-        Set<OWLClass> classes1 = ontology1.getClassesInSignature();
-        Set<OWLClass> classes2 = ontology2.getClassesInSignature();
-        Set<OWLClass> commonClasses = new HashSet<>(classes1);
-        commonClasses.retainAll(classes2);
-
-        // Get common object properties
-        Set<OWLObjectProperty> objectProperties1 = ontology1.getObjectPropertiesInSignature();
-        Set<OWLObjectProperty> objectProperties2 = ontology2.getObjectPropertiesInSignature();
-        Set<OWLObjectProperty> commonObjectProperties = new HashSet<>(objectProperties1);
-        commonObjectProperties.retainAll(objectProperties2);
-
-        // Get common data properties
-        Set<OWLDataProperty> dataProperties1 = ontology1.getDataPropertiesInSignature();
-        Set<OWLDataProperty> dataProperties2 = ontology2.getDataPropertiesInSignature();
-        Set<OWLDataProperty> commonDataProperties = new HashSet<>(dataProperties1);
-        commonDataProperties.retainAll(dataProperties2);
-
-        // Get common individuals
-        Set<OWLNamedIndividual> individuals1 = ontology1.getIndividualsInSignature();
-        Set<OWLNamedIndividual> individuals2 = ontology2.getIndividualsInSignature();
-        Set<OWLNamedIndividual> commonIndividuals = new HashSet<>(individuals1);
-        commonIndividuals.retainAll(individuals2);
-
-        System.out.println("Common Classes:");
-        for (OWLClass cls : commonClasses) {
-            String className = cls.getIRI().getShortForm();
-            System.out.println(className);
-        }
-
-        System.out.println("Common Object Properties:");
-        for (OWLObjectProperty property : commonObjectProperties) {
-            String propertyName = property.getIRI().getShortForm();
-            System.out.println(propertyName);
-        }
-
-        System.out.println("Common Data Properties:");
-        for (OWLDataProperty property : commonDataProperties) {
-            String propertyName = property.getIRI().getShortForm();
-            System.out.println(propertyName);
-        }
-
-        System.out.println("Common Individuals:");
-        for (OWLNamedIndividual individual : commonIndividuals) {
-            String individualName = individual.getIRI().getShortForm();
-            System.out.println(individualName);
-        }
-    }
-
-
-    public static void merged(String onto1, String onto2) throws OWLOntologyCreationException {
-        OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
-        OWLOntology ontology1;
-        OWLOntology ontology2;
-
-        // Load ontology 1
-        InputStream inStream1 = new ByteArrayInputStream(onto1.getBytes(StandardCharsets.UTF_8));
-        ontology1 = manager.loadOntologyFromOntologyDocument(inStream1);
-
-        // Load ontology 2
-        InputStream inStream2 = new ByteArrayInputStream(onto2.getBytes(StandardCharsets.UTF_8));
-        ontology2 = manager.loadOntologyFromOntologyDocument(inStream2);
-
-        Set<OWLClass> classes1 = ontology1.getClassesInSignature();
-        Set<OWLClass> classes2 = ontology2.getClassesInSignature();
-
-        Set<OWLClass> mergedClasses = new HashSet<>(classes1);
-        mergedClasses.addAll(classes2);
-
-        // Get common object properties
-        Set<OWLObjectProperty> objectProperties1 = ontology1.getObjectPropertiesInSignature();
-        Set<OWLObjectProperty> objectProperties2 = ontology2.getObjectPropertiesInSignature();
-        Set<OWLObjectProperty> mergedObjectProperties = new HashSet<>(objectProperties1);
-        mergedObjectProperties.addAll(objectProperties2);
-
-        // Get common data properties
-        Set<OWLDataProperty> dataProperties1 = ontology1.getDataPropertiesInSignature();
-        Set<OWLDataProperty> dataProperties2 = ontology2.getDataPropertiesInSignature();
-        Set<OWLDataProperty> mergedDataProperties = new HashSet<>(dataProperties1);
-        mergedDataProperties.retainAll(dataProperties2);
-
-        // Get common individuals
-        Set<OWLNamedIndividual> individuals1 = ontology1.getIndividualsInSignature();
-        Set<OWLNamedIndividual> individuals2 = ontology2.getIndividualsInSignature();
-        Set<OWLNamedIndividual> mergedIndividuals = new HashSet<>(individuals1);
-        mergedIndividuals.retainAll(individuals2);
-
-        System.out.println("Merged Classes:");
-        for (OWLClass cls : mergedClasses) {
-            String className = cls.getIRI().getShortForm();
-            System.out.println(className);
-        }
-
-        System.out.println("Merged Object Properties:");
-        for (OWLObjectProperty property : mergedObjectProperties) {
-            String propertyName = property.getIRI().getShortForm();
-            System.out.println(propertyName);
-        }
-
-        System.out.println("Merged Data Properties:");
-        for (OWLDataProperty property : mergedDataProperties) {
-            String propertyName = property.getIRI().getShortForm();
-            System.out.println(propertyName);
-        }
-
-        System.out.println("Merged Individuals:");
-        for (OWLNamedIndividual individual : mergedIndividuals) {
-            String individualName = individual.getIRI().getShortForm();
-            System.out.println(individualName);
-        }
-    }
-
-    public static void main(String[] args) throws OWLOntologyCreationException {
-        String onto1 = "<rdf:RDF xmlns=\"http://example.com/ontology#\"\n" +
-                "         xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n" +
-                "         xmlns:rdfs=\"http://www.w3.org/2000/01/rdf-schema#\"\n" +
-                "         xmlns:owl=\"http://www.w3.org/2002/07/owl#\">\n" +
-                "\n" +
-                "  <owl:Ontology rdf:about=\"http://example.com/ontology#AgeRelatedMacularDegeneration1\"/>\n" +
-                "\n" +
-                "  <owl:Class rdf:about=\"#AgeRelatedMacularDegeneration\">\n" +
-                "    <rdfs:subClassOf rdf:resource=\"#EyeDisease\"/>\n" +
-                "    <rdfs:comment>Age-related macular degeneration is the leading cause of visual loss and blindness in Americans over the age of 65. It results in blurred vision, distortion, and difficulty with everyday activities, such as reading, driving, and recognizing faces. There are two types, dry and wet, and several risk factors including age, smoking, genetics, race, obesity, and cardiovascular diseases. Lifestyle changes, such as eating a healthy diet, exercising, and avoiding smoking, can reduce the risk of AMD. There are also treatments available, including nutritional supplements, light therapy, laser surgery, and injectable drugs, which depend on the type of AMD.</rdfs:comment>\n" +
-                "  </owl:Class>\n" +
-                "\n" +
-                "  <owl:Class rdf:about=\"#EyeDisease\"/>\n" +
-                "\n" +
-                "  <owl:Class rdf:about=\"#DryAMD\">\n" +
-                "    <rdfs:subClassOf rdf:resource=\"#AgeRelatedMacularDegeneration\"/>\n" +
-                "    <rdfs:comment>Dry AMD is caused by thinning and yellow deposits in the macula. It progresses much more slowly than wet AMD and does not usually lead to severe vision loss. Nutritional supplements and light therapy are some of the treatments available for dry AMD.</rdfs:comment>\n" +
-                "  </owl:Class>\n" +
-                "\n" +
-                "  <owl:Class rdf:about=\"#WetAMD\">\n" +
-                "    <rdfs:subClassOf rdf:resource=\"#AgeRelatedMacularDegeneration\"/>\n" +
-                "    <rdfs:comment>Wet AMD is caused by abnormal growth of blood vessels behind the retina which leak fluid and blood, causing swelling and permanent vision loss if not treated. For wet AMD, injectable drugs and laser surgery are used as treatments.</rdfs:comment>\n" +
-                "  </owl:Class>\n" +
-                "\n" +
-                "  <owl:Class rdf:about=\"#RiskFactor\"/>\n" +
-                "  <owl:Class rdf:about=\"#GeneticRiskFactor\">\n" +
-                "    <rdfs:subClassOf rdf:resource=\"#RiskFactor\"/>\n" +
-                "    <rdfs:comment>AMD has a genetic risk factor associated with it.</rdfs:comment>\n" +
-                "  </owl:Class>\n" +
-                "  <owl:Class rdf:about=\"#EnvironmentalFactor\"/>\n" +
-                "  <owl:Class rdf:about=\"#LifestyleFactor\">\n" +
-                "    <rdfs:subClassOf rdf:resource=\"#EnvironmentalFactor\"/>\n" +
-                "    <rdfs:comment>Lifestyle factors, such as diet, exercise, and smoking, can reduce or increase the risk of AMD.</rdfs:comment>\n" +
-                "  </owl:Class>\n" +
-                "\n" +
-                "  <owl:ObjectProperty rdf:about=\"#hasRiskFactor\">\n" +
-                "    <rdfs:domain rdf:resource=\"#AgeRelatedMacularDegeneration\"/>\n" +
-                "    <rdfs:range rdf:resource=\"#RiskFactor\"/>\n" +
-                "  </owl:ObjectProperty>\n" +
-                "\n" +
-                "  <owl:ObjectProperty rdf:about=\"#hasGeneticRiskFactor\">\n" +
-                "    <rdfs:domain rdf:resource=\"#AgeRelatedMacularDegeneration\"/>\n" +
-                "    <rdfs:range rdf:resource=\"#GeneticRiskFactor\"/>\n" +
-                "  </owl:ObjectProperty>\n" +
-                "\n" +
-                "  <owl:ObjectProperty rdf:about=\"#hasEnvironmentalFactor\">\n" +
-                "    <rdfs:domain rdf:resource=\"#AgeRelatedMacularDegeneration\"/>\n" +
-                "    <rdfs:range rdf:resource=\"#EnvironmentalFactor\"/>\n" +
-                "  </owl:ObjectProperty>\n" +
-                "\n" +
-                "  <owl:Class rdf:about=\"#NutritionalSupplement\">\n" +
-                "    <rdfs:subClassOf rdf:resource=\"#Treatment\"/>\n" +
-                "    <rdfs:comment>There are several nutritional supplements available, such as vitamin C and zinc, for the treatment of dry AMD.</rdfs:comment>\n" +
-                "  </owl:Class>\n" +
-                "\n" +
-                "  <owl:Class rdf:about=\"#LightTherapy\">\n" +
-                "    <rdfs:subClassOf rdf:resource=\"#Treatment\"/>\n" +
-                "    <rdfs:comment>Light therapy is a treatment option for dry AMD.</rdfs:comment>\n" +
-                "  </owl:Class>\n" +
-                "\n" +
-                "  <owl:Class rdf:about=\"#LaserSurgery\">\n" +
-                "    <rdfs:subClassOf rdf:resource=\"#Treatment\"/>\n" +
-                "    <rdfs:comment>Laser surgery is used as a treatment option for both dry and wet AMD to help stop the leaking of blood and fluid from new vessels.</rdfs:comment>\n" +
-                "  </owl:Class>\n" +
-                "\n" +
-                "  <owl:Class rdf:about=\"#InjectableDrugs\">\n" +
-                "    <rdfs:subClassOf rdf:resource=\"#Treatment\"/>\n" +
-                "    <rdfs:comment>Injectable drugs are a common treatment option for wet AMD.</rdfs:comment>\n" +
-                "  </owl:Class>\n" +
-                "\n" +
-                "  <owl:Class rdf:about=\"#Treatment\"/>\n" +
-                "\n" +
-                "  <owl:ObjectProperty rdf:about=\"#hasTreatment\">\n" +
-                "    <rdfs:domain rdf:resource=\"#AgeRelatedMacularDegeneration\"/>\n" +
-                "    <rdfs:range>\n" +
-                "        <owl:Class>\n" +
-                "            <owl:unionOf rdf:parseType=\"Collection\">\n" +
-                "                <rdf:Description rdf:about=\"#NutritionalSupplement\"/>\n" +
-                "                <rdf:Description rdf:about=\"#LightTherapy\"/>\n" +
-                "                <rdf:Description rdf:about=\"#LaserSurgery\"/>\n" +
-                "                <rdf:Description rdf:about=\"#InjectableDrugs\"/>\n" +
-                "            </owl:unionOf>\n" +
-                "        </owl:Class>\n" +
-                "    </rdfs:range>\n" +
-                "    <rdfs:comment>Treatments for AMD include nutritional supplements, light therapy, laser surgery, and injectable drugs.</rdfs:comment>\n" +
-                "  </owl:ObjectProperty>\n" +
-                "\n" +
-                "  <owl:Class rdf:about=\"#RegularEyeExamination\">\n" +
-                "    <rdfs:subClassOf rdf:resource=\"#Prevention\"/>\n" +
-                "    <rdfs:comment>Regular eye exams are key to detecting AMD early and monitoring its progression.</rdfs:comment>\n" +
-                "  </owl:Class>\n" +
-                "\n" +
-                "  <owl:Class rdf:about=\"#Prevention\"/>\n" +
-                "\n" +
-                "  <owl:ObjectProperty rdf:about=\"#hasPreventativeMeasure\">\n" +
-                "    <rdfs:domain rdf:resource=\"#AgeRelatedMacularDegeneration\"/>\n" +
-                "    <rdfs:range>\n" +
-                "        <owl:Class>\n" +
-                "            <owl:unionOf rdf:parseType=\"Collection\">\n" +
-                "                <rdf:Description rdf:about=\"#LifestyleFactor\"/>\n" +
-                "                <rdf:Description rdf:about=\"#RegularEyeExamination\"/>\n" +
-                "            </owl:unionOf>\n" +
-                "        </owl:Class>\n" +
-                "    </rdfs:range>\n" +
-                "    <rdfs:comment>Preventative measures for AMD include lifestyle changes and regular eye exams.</rdfs:comment>\n" +
-                "  </owl:ObjectProperty>\n" +
-                "\n" +
-                "</rdf:RDF>";
-
-        String onto2 =
-                "<rdf:RDF xmlns=\"http://example.com/ontology#\"\n" +
-                "         xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n" +
-                "         xmlns:rdfs=\"http://www.w3.org/2000/01/rdf-schema#\"\n" +
-                "         xmlns:owl=\"http://www.w3.org/2002/07/owl#\">\n" +
-                "\n" +
-                "  <owl:Ontology rdf:about=\"http://example.com/ontology#AgeRelatedMacularDegeneration2\"/>\n" +
-                "\n" +
-                "  <owl:Class rdf:about=\"#AgeRelatedMacularDegeneration\">\n" +
-                "    <rdfs:subClassOf rdf:resource=\"#Disease\"/>\n" +
-                "    <rdfs:comment>Age-related macular degeneration (AMD) affects the macula in the eye, and is the leading cause of visual loss and blindness in Americans over the age of 65.</rdfs:comment>\n" +
-                "  </owl:Class>\n" +
-                "\n" +
-                "  <owl:Class rdf:about=\"#Disease\"/>\n" +
-                "\n" +
-                "  <owl:Class rdf:about=\"#DryAMD\">\n" +
-                "    <rdfs:subClassOf rdf:resource=\"#AgeRelatedMacularDegeneration\"/>\n" +
-                "    <rdfs:comment>Dry AMD is a more common type of AMD, caused by thinning and yellow deposits in the macula, and progresses much more slowly than wet AMD.</rdfs:comment>\n" +
-                "  </owl:Class>\n" +
-                "\n" +
-                "  <owl:Class rdf:about=\"#WetAMD\">\n" +
-                "    <rdfs:subClassOf rdf:resource=\"#AgeRelatedMacularDegeneration\"/>\n" +
-                "    <rdfs:comment>Wet AMD is a type of AMD caused by abnormal new blood vessels growing behind the retina, and can lead to permanent vision loss.</rdfs:comment>\n" +
-                "  </owl:Class>\n" +
-                "\n" +
-                "  <owl:Class rdf:about=\"#PhotoreceptorDegeneration\">\n" +
-                "    <rdfs:subClassOf rdf:resource=\"#AgeRelatedMacularDegeneration\"/>\n" +
-                "    <rdfs:comment>The breakdown of photoreceptor cells in the macula causes blurred vision, distortion, and difficulty with everyday activities such as reading, driving, and recognizing faces.</rdfs:comment>\n" +
-                "  </owl:Class>\n" +
-                "\n" +
-                "  <owl:ObjectProperty rdf:about=\"#hasType\">\n" +
-                "    <rdfs:domain rdf:resource=\"#AgeRelatedMacularDegeneration\"/>\n" +
-                "    <rdfs:range rdf:resource=\"#Disease\"/>\n" +
-                "    <rdfs:comment>AMD can be classified into dry and wet types.</rdfs:comment>\n" +
-                "  </owl:ObjectProperty>\n" +
-                "\n" +
-                "  <owl:ObjectProperty rdf:about=\"#hasRiskFactor\">\n" +
-                "    <rdfs:domain rdf:resource=\"#AgeRelatedMacularDegeneration\"/>\n" +
-                "    <rdfs:range rdf:resource=\"#RiskFactor\"/>\n" +
-                "    <rdfs:comment>The risk factors for AMD include age, smoking, genetics, race, obesity, and cardiovascular diseases.</rdfs:comment>\n" +
-                "  </owl:ObjectProperty>\n" +
-                "\n" +
-                "  <owl:Class rdf:about=\"#RiskFactor\"/>\n" +
-                "\n" +
-                "  <owl:Class rdf:about=\"#LifestyleModification\">\n" +
-                "    <rdfs:subClassOf rdf:resource=\"#RiskFactor\"/>\n" +
-                "    <rdfs:comment>Lifestyle changes like eating a healthy diet, exercising regularly, and avoiding smoking can help reduce the risk of AMD.</rdfs:comment>\n" +
-                "  </owl:Class>\n" +
-                "\n" +
-                "  <owl:ObjectProperty rdf:about=\"#advisesToModifyLifestyle\">\n" +
-                "    <rdfs:domain rdf:resource=\"#AgeRelatedMacularDegeneration\"/>\n" +
-                "    <rdfs:range rdf:resource=\"#LifestyleModification\"/>\n" +
-                "  </owl:ObjectProperty>\n" +
-                "\n" +
-                "  <owl:Class rdf:about=\"#Treatment\"/>\n" +
-                "  \n" +
-                "  <owl:Class rdf:about=\"#NutritionalSupplement\">\n" +
-                "    <rdfs:subClassOf rdf:resource=\"#Treatment\"/>\n" +
-                "    <rdfs:comment>Several nutritional supplements are available for dry AMD, such as vitamin C and zinc.</rdfs:comment>\n" +
-                "  </owl:Class>\n" +
-                "\n" +
-                "  <owl:ObjectProperty rdf:about=\"#hasTreatment\">\n" +
-                "    <rdfs:domain rdf:resource=\"#AgeRelatedMacularDegeneration\"/>\n" +
-                "    <rdfs:range rdf:resource=\"#Treatment\"/>\n" +
-                "    <rdfs:comment>Treatments for AMD include light therapy, laser photocoagulation, anti-angiogenic drugs, and injectable drugs.</rdfs:comment>\n" +
-                "  </owl:ObjectProperty>\n" +
-                "\n" +
-                "  <owl:Class rdf:about=\"#WetAMDInjection\"/>\n" +
-                "  \n" +
-                "  <owl:ObjectProperty rdf:about=\"#hasInjection\">\n" +
-                "    <rdfs:domain rdf:resource=\"#WetAMD\"/>\n" +
-                "    <rdfs:range rdf:resource=\"#WetAMDInjection\"/>\n" +
-                "    <rdfs:comment>Injectable drugs are a main treatment for wet AMD, and are the most effective treatment available.</rdfs:comment>\n" +
-                "  </owl:ObjectProperty>\n" +
-                "\n" +
-                "  <owl:Class rdf:about=\"#Lasersurgery\">\n" +
-                "    <rdfs:subClassOf rdf:resource=\"#Treatment\"/>\n" +
-                "    <rdfs:comment>Laser surgery is also used to treat AMD.</rdfs:comment>\n" +
-                "  </owl:Class>\n" +
-                "\n" +
-                "  <owl:ObjectProperty rdf:about=\"#hasSurgery\">\n" +
-                "    <rdfs:domain rdf:resource=\"#AgeRelatedMacularDegeneration\"/>\n" +
-                "    <rdfs:range rdf:resource=\"#Lasersurgery\"/>\n" +
-                "  </owl:ObjectProperty>\n" +
-                "\n" +
-                "  <owl:Class rdf:about=\"#RegularEyeExamination\">\n" +
-                "    <rdfs:subClassOf rdf:resource=\"#RiskFactor\"/>\n" +
-                "    <rdfs:comment>Regular eye examinations are key to detecting AMD early.</rdfs:comment>\n" +
-                "  </owl:Class>\n" +
-                "\n" +
-                "  <owl:ObjectProperty rdf:about=\"#recommendsEyeExam\">\n" +
-                "    <rdfs:domain rdf:resource=\"#AgeRelatedMacularDegeneration\"/>\n" +
-                "    <rdfs:range rdf:resource=\"#RegularEyeExamination\"/>\n" +
-                "  </owl:ObjectProperty>\n" +
-                "\n" +
-                "</rdf:RDF>";
-
-        common(onto1, onto2);
-        merged(onto1, onto2);
     }
 }

@@ -1,7 +1,7 @@
 package com.example.onto_generator.controller;
 
-
 import com.example.onto_generator.model.*;
+import com.example.onto_generator.model.dto.*;
 import com.example.onto_generator.service.MetricsService;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,43 +18,42 @@ public class MetricsController {
     @Autowired
     private MetricsService metricsService;
 
+    @Autowired
+    private DTOConverter dtoConverter;
+
     @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/metrics")
-    public ResponseEntity<BaseMetrics> metrics(@RequestBody String onto) throws OWLOntologyCreationException {
-        System.out.println("here is the controller");
-        System.out.println(onto);
-        return ResponseEntity.ok(metricsService.baseMetrics(onto));
+    public ResponseEntity<BaseMetricsDTO> metrics(@RequestBody String ontology) throws OWLOntologyCreationException {
+        BaseMetrics metrics = metricsService.baseMetrics(ontology);
+        BaseMetricsDTO metricsDTO = dtoConverter.convertToBaseMetricsDTO(metrics);
+        return ResponseEntity.ok(metricsDTO);
     }
 
     @PostMapping("/data-property-metrics")
-    public ResponseEntity<DataPropertyAxiomsMetrics> dataPropertyMetrics(@RequestBody String ontology) throws OWLOntologyCreationException {
-        System.out.println("Data Property Metrics:");
-        System.out.println(ontology);
+    public ResponseEntity<DataPropertyAxiomsMetricsDTO> dataPropertyMetrics(@RequestBody String ontology) throws OWLOntologyCreationException {
         DataPropertyAxiomsMetrics metrics = metricsService.dataPropertyAxiomsMetrics(ontology);
-        return ResponseEntity.ok(metrics);
+        DataPropertyAxiomsMetricsDTO metricsDTO = dtoConverter.convertToDataPropertyAxiomsMetricsDTO(metrics);
+        return ResponseEntity.ok(metricsDTO);
     }
 
     @PostMapping("/class-axioms-metrics")
-    public ResponseEntity<ClassAxiomsMetrics> classAxiomsMetrics(@RequestBody String ontology) throws OWLOntologyCreationException {
-        System.out.println("Class Axioms Metrics:");
-        System.out.println(ontology);
+    public ResponseEntity<ClassAxiomsMetricsDTO> classAxiomsMetrics(@RequestBody String ontology) throws OWLOntologyCreationException {
         ClassAxiomsMetrics metrics = metricsService.classAxiomsMetrics(ontology);
-        return ResponseEntity.ok(metrics);
+        ClassAxiomsMetricsDTO metricsDTO = dtoConverter.convertToClassAxiomsMetricsDTO(metrics);
+        return ResponseEntity.ok(metricsDTO);
     }
 
     @PostMapping("/individual-axioms-metrics")
-    public ResponseEntity<IndividualAxiomsMetrics> individualAxiomsMetrics(@RequestBody String ontology) throws OWLOntologyCreationException {
-        System.out.println("Individual Axioms Metrics:");
-        System.out.println(ontology);
+    public ResponseEntity<IndividualAxiomsMetricsDTO> individualAxiomsMetrics(@RequestBody String ontology) throws OWLOntologyCreationException {
         IndividualAxiomsMetrics metrics = metricsService.individualAxiomsMetrics(ontology);
-        return ResponseEntity.ok(metrics);
+        IndividualAxiomsMetricsDTO metricsDTO = dtoConverter.convertToIndividualAxiomsMetricsDTO(metrics);
+        return ResponseEntity.ok(metricsDTO);
     }
 
     @PostMapping("/object-property-metrics")
-    public ResponseEntity<ObjectPropertyAxiomsMetrics> objectPropertyMetrics(@RequestBody String ontology) throws OWLOntologyCreationException {
-        System.out.println("Object Property Metrics:");
-        System.out.println(ontology);
+    public ResponseEntity<ObjectPropertyAxiomsMetricsDTO> objectPropertyMetrics(@RequestBody String ontology) throws OWLOntologyCreationException {
         ObjectPropertyAxiomsMetrics metrics = metricsService.objectPropertyAxiomsMetrics(ontology);
-        return ResponseEntity.ok(metrics);
+        ObjectPropertyAxiomsMetricsDTO metricsDTO = dtoConverter.convertToObjectPropertyAxiomsMetricsDTO(metrics);
+        return ResponseEntity.ok(metricsDTO);
     }
 }
