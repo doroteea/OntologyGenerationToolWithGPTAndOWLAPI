@@ -62,7 +62,7 @@
   background-color: #6495ed;
   text-decoration: none;
   height: 4vh;
-  min-width: 15vh; /* Changed from 'width' to 'min-width' */
+  min-width: 15vh;
   margin: 2vh;
   border: none;
   border-radius: 5px;

@@ -1,7 +1,7 @@
 import {Component, ElementRef, Input, OnInit, ViewChild} from '@angular/core';
 
 import * as cytoscape from 'cytoscape';
-import {GeneratorService} from '../service/generatorService';
+import {MainViewService} from '../service/mainViewService';
 import {HttpClient} from "@angular/common/http";
 import { saveAs } from 'file-saver';
 import {BaseMetrics} from "../model/BaseMetrics";
@@ -45,13 +45,13 @@ export class MainViewComponent implements OnInit {
   ontologyFileContent: string = '';
   ontologyFile: any;
 
-  constructor(private service: GeneratorService,private httpClient: HttpClient) {}
+  constructor(private service: MainViewService, private httpClient: HttpClient) {}
 
 
 //triplets
   ontology_list! : any[];
   updates_list! : any[];
-  apiKey = "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";
+  //apiKey = "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";
   SELECTED_PROMPT = "STATELESS";
 
   prompt = '';
@@ -235,7 +235,6 @@ export class MainViewComponent implements OnInit {
 
   updateGraph(updates: any[]) {
     let current_graph = JSON.parse(JSON.stringify(this.graphState));
-    //let current_graph_rdf = JSON.parse(JSON.stringify(this.graphStateRDF));
 
     if (updates.length === 0) {
       return;
@@ -272,30 +271,11 @@ export class MainViewComponent implements OnInit {
 
         current_graph.edges.push({ from: entity1, to: entity2, label: relation});
 
-        // // Update RDF-specific graph state
-        // if (this.buttonText === "RDF Schema") {
-        //   if (node1 === undefined) {
-        //     current_graph_rdf.nodes.push({ id: entity1, label: entity1, color: "#6495ed"});
-        //   }
-        //
-        //   if (node2 === undefined) {
-        //     current_graph_rdf.nodes.push({ id: entity2, label: entity2, color: "#6495ed"});
-        //   }
-        //
-        //   let edgeRDF = current_graph_rdf.edges.find((edge: { from: any; to: any; }) => edge.from === entity1 && edge.to === entity2);
-        //   if (edgeRDF !== undefined) {
-        //     edgeRDF.label = relation;
-        //     return;
-        //   }
-        //
-        //   current_graph_rdf.edges.push({ from: entity1, to: entity2, label: relation});
-        // }
       }
       else if (update.length === 2 && update[1].startsWith("#")) {
 
         const [entity, color] = update;
 
-        // check if the node already exists
         var node = current_graph.nodes.find((node: { id: any; }) => node.id === entity);
 
         if (node === undefined) {
@@ -303,14 +283,6 @@ export class MainViewComponent implements OnInit {
           return;
         }
 
-        // var node1 = current_graph_rdf.nodes.find((node: { id: any; }) => node.id === entity);
-        //
-        // if (node1 === undefined) {
-        //   current_graph_rdf.nodes.push({id: entity, label: entity, color: color});
-        //   return;
-        // }
-
-        // update the color of the node
         node.color = color;
         console.log(color);
       }
@@ -326,23 +298,10 @@ export class MainViewComponent implements OnInit {
         current_graph.nodes = current_graph.nodes.filter((node: { id: any; }) => node.id !== index);
         current_graph.edges = current_graph.edges.filter((edge: { from: any; to: any; }) => edge.from !== index && edge.to !== index);
 
-        // Update RDF-specific graph state
-        // if (this.buttonText === "RDF Schema") {
-        //   current_graph_rdf.nodes = current_graph_rdf.nodes.filter((node: { id: any; }) => node.id !== index);
-        //   current_graph_rdf.edges = current_graph_rdf.edges.filter((edge: { from: any; to: any; }) => edge.from !== index && edge.to !== index);
-        // } else {
-        //   // Delete from RDF-specific graph state if index is found
-        //   let nodeRDF = current_graph_rdf.nodes.find((node: { id: any; }) => node.id === index);
-        //   if (nodeRDF !== undefined) {
-        //     current_graph_rdf.nodes = current_graph_rdf.nodes.filter((node: { id: any; }) => node.id !== index);
-        //     current_graph_rdf.edges = current_graph_rdf.edges.filter((edge: { from: any; to: any; }) => edge.from !== index && edge.to !== index);
-        //   }
-       // }
       }
     });
 
     this.graphState = current_graph;
-   // this.graphStateRDF = current_graph_rdf;
 
     this.updateCystoGraph();
 
@@ -611,8 +570,6 @@ export class MainViewComponent implements OnInit {
   }
 
   graphState = { nodes: [], edges: [] };
- //graphStateRDF = { nodes: [], edges: [] };
-
   changeGraph() {
     this.buttonClass = this.buttonClass === 'button' ? 'button_secundar' : 'button';
     this.buttonText = this.buttonText === 'RDF Schema' ? 'Knowledge Schema' : 'RDF Schema';

@@ -1,7 +1,7 @@
 import {Component, OnInit} from '@angular/core';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 import cytoscape, {Core} from 'cytoscape';
-import {GeneratorService} from "./service/generatorService";
+import {MainViewService} from "./service/mainViewService";
 
 @Component({
   selector: 'app-root',
@@ -17,7 +17,7 @@ export class AppComponent implements OnInit {
   // SELECTED_PROMPT = "STATELESS";
   // graphState = { nodes: [], edges: [] };
   //
-  // constructor(private service: GeneratorService,private httpClient: HttpClient) { }
+  // constructor(private service: MainViewService,private httpClient: HttpClient) { }
   //
   // ngOnInit() {
   //   this.cy = cytoscape({
