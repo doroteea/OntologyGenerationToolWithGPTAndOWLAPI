@@ -1,8 +1,8 @@
 export class DataPropertyAxiomsMetrics {
-  SubDataPropertyOfAxiomsMetric: number| undefined;
-  EquivalentDataPropertyAxiomsMetric: number| undefined;
-  DisjointDataPropertyAxiomsMetric: number| undefined;
-  FunctionalDataPropertyAxiomsMetric: number| undefined;
-  DataPropertyDomainAxiomsMetric: number| undefined;
-  DataPropertyRangeAxiomsMetric: number| undefined;
+  subDataPropertyOfAxiomsMetric: number| undefined;
+  equivalentDataPropertyAxiomsMetric: number| undefined;
+  disjointDataPropertyAxiomsMetric: number| undefined;
+  functionalDataPropertyAxiomsMetric: number| undefined;
+  dataPropertyDomainAxiomsMetric: number| undefined;
+  dataPropertyRangeAxiomsMetric: number| undefined;
 }

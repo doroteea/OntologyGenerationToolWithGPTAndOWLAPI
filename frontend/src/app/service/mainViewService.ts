@@ -46,6 +46,7 @@ constructor(private http: HttpClient) {}
   }
 
   getClassMetrics(onto: string) {
+
     return this.http.post<ClassAxiomsMetrics>(this.classmetricsUrl,onto);
   }
 

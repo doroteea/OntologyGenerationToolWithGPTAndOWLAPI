@@ -3,11 +3,11 @@ import { RouterModule, Routes } from '@angular/router';
 import {MainViewComponent} from "./main-view/main-view.component";
 
 const routes: Routes = [
-  // {
-  //   path: '',
-  //   redirectTo: 'main-view',
-  //   pathMatch: 'full',
-  // },
+  {
+    path: '',
+    redirectTo: 'main-view',
+    pathMatch: 'full',
+  },
   {
     path:'main-view',
     component: MainViewComponent,

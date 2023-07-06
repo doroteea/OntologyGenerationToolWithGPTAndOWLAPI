@@ -1,7 +1,7 @@
 export class ClassAxiomsMetrics {
-  SubClassOfAxiomsMetric: number| undefined;
-  EquivalentClassesAxiomsMetric: number| undefined;
-  DisjointClassesAxiomsMetric: number| undefined;
-  GCIMetric: number| undefined;
-  HiddenGCIMetric: number| undefined;
+  equivalentClassesAxiomsMetric: number| undefined;
+  subClassOfAxiomsMetric: number| undefined;
+  disjointClassesAxiomsMetric: number| undefined;
+  gcimetric: number| undefined;
+  hiddenGCIMetric: number| undefined;
 }

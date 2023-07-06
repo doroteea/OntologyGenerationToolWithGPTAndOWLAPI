@@ -2,7 +2,7 @@ import {Component, ElementRef, Input, OnInit, ViewChild} from '@angular/core';
 
 import * as cytoscape from 'cytoscape';
 import {MainViewService} from '../service/mainViewService';
-import {HttpClient} from "@angular/common/http";
+import {HttpClient, HttpHeaders} from "@angular/common/http";
 import { saveAs } from 'file-saver';
 import {BaseMetrics} from "../model/BaseMetrics";
 import {ClassAxiomsMetrics} from "../model/ClassAxiomsMetrics";
@@ -10,6 +10,7 @@ import {ObjectPropertyAxiomsMetrics} from "../model/ObjectPropertyAxiomsMetrics"
 import {DataPropertyAxiomsMetrics} from "../model/DataPropertyAxiomsMetrics";
 import {IndividualAxiomsMetrics} from "../model/IndividualAxiomsMetrics";
 import Swal from 'sweetalert2';
+import {response} from "express";
 
 @Component({
   selector: 'app-main-view',
@@ -47,11 +48,8 @@ export class MainViewComponent implements OnInit {
 
   constructor(private service: MainViewService, private httpClient: HttpClient) {}
 
-
-//triplets
   ontology_list! : any[];
   updates_list! : any[];
-  //apiKey = "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";
   SELECTED_PROMPT = "STATELESS";
 
   prompt = '';
@@ -71,19 +69,19 @@ export class MainViewComponent implements OnInit {
     let formattedSyntax: string;
     switch (syntax) {
       case 'OWL':
-        formattedSyntax = 'owl';
+        formattedSyntax = 'owlxml';
         break;
       case 'RDF':
-        formattedSyntax = 'rdf';
+        formattedSyntax = 'rdfxml';
         break;
       case 'TURTLE':
         formattedSyntax = 'ttl';
         break;
       case 'Manchester Syntax':
-        formattedSyntax = 'ms';
+        formattedSyntax = 'manc';
         break;
       case 'Functional Syntax':
-        formattedSyntax = 'fs';
+        formattedSyntax = 'func';
         break;
       case 'KRSS2':
         formattedSyntax = 'krss2';
@@ -115,6 +113,7 @@ export class MainViewComponent implements OnInit {
         break;
       case "4":
         this.num = '4';
+        console.log("here");
         this.performMetricsRequest();
         break;
       case "5":
@@ -133,7 +132,6 @@ export class MainViewComponent implements OnInit {
   }
 
   updateCystoGraph() {
-    let filteredEdges;
     if (this.buttonText == "RDF Schema") {
       //  console.log("rdf graph"+ this.graphStateRDF);
       // @ts-ignore
@@ -442,7 +440,6 @@ export class MainViewComponent implements OnInit {
     };
     this.SELECTED_PROMPT = "STATELESS";
 
-   // this.graphStateRDF = this.graphState;
 
     this.updates_list = [];
     this.ontology_list = [];
@@ -492,24 +489,51 @@ export class MainViewComponent implements OnInit {
 
   }
 
+  httpOptions = {
+    headers: new HttpHeaders({
+      'Content-Type':  'text/plain',
+      'Response-Type': 'json'
+    })
+  };
+
   performMetricsRequest() {
+    console.log("hello world");
     if (this.onto) {
-      console.log(this.onto);
       this.service.getBaseMetrics(this.onto).subscribe(response => {
+        console.log("Response: " + JSON.stringify(response));
         this.baseMetrics = response;
+      }, error => {
+        console.error('Error:', error);
       });
-      this.service.getClassMetrics(this.onto).subscribe(response => {
+
+      this.service.getClassMetrics(this.onto).subscribe(response =>{
+        console.log("Response: " + JSON.stringify(response));
         this.classMetrics = response;
+      }, error => {
+        console.error('Error:', error);
       });
-      this.service.getDataMetrics(this.onto).subscribe(response => {
-        this.dataMetrics = response;
-      });
-      this.service.getIndividualMetrics(this.onto).subscribe(response => {
-        this.individualMetrics = response;
-      });
+
       this.service.getObjectMetrics(this.onto).subscribe(response => {
+        console.log("Response: " + JSON.stringify(response));
         this.objectMetrics = response;
+      }, error => {
+        console.error('Error:', error);
       });
+
+      this.service.getDataMetrics(this.onto).subscribe(response => {
+        console.log("Response: " + JSON.stringify(response));
+        this.dataMetrics = response;
+      }, error => {
+        console.error('Error:', error);
+      });
+
+      this.service.getIndividualMetrics(this.onto).subscribe(response => {
+        console.log("Response: " + JSON.stringify(response));
+        this.individualMetrics = response;
+      }, error => {
+        console.error('Error:', error);
+      });
+
     }
   }
 

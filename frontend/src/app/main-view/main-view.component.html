@@ -81,25 +81,25 @@
             <h1>Metrics on Ontology</h1>
             <h3>Base Metrics</h3>
             <div class="base_metric">
-              <p>Axioms: {{baseMetrics.axioms}}</p>
-              <p>Logical Axioms Count: {{baseMetrics.logicalAxiomsCount}}</p>
-              <p>Class Count: {{baseMetrics.classCount}}</p>
-              <p>Anonymous Class Count: {{baseMetrics.anonymousClassCount}}</p>
-              <p>Object Property Count: {{baseMetrics.objectPropertyCount}}</p>
-              <p>Data Property Count: {{baseMetrics.dataPropertyCount}}</p>
-              <p>Individuals Count: {{baseMetrics.individualsCount}}</p>
-              <p>DL Expressivity: {{baseMetrics.dlExpresivity}}</p>
-              <p>Direct Imports: {{baseMetrics.directImports}}</p>
-              <p>Declared Imports: {{baseMetrics.declaredImports}}</p>
-              <p>Actual Imports: {{baseMetrics.actualImports}}</p>
+              <p>Axioms: {{baseMetrics?.axioms}}</p>
+              <p>Logical Axioms Count: {{baseMetrics?.logicalAxiomsCount}}</p>
+              <p>Class Count: {{baseMetrics?.classCount}}</p>
+              <p>Anonymous Class Count: {{baseMetrics?.anonymousClassCount}}</p>
+              <p>Object Property Count: {{baseMetrics?.objectPropertyCount}}</p>
+              <p>Data Property Count: {{baseMetrics?.dataPropertyCount}}</p>
+              <p>Individuals Count: {{baseMetrics?.individualsCount}}</p>
+              <p>DL Expressivity: {{baseMetrics?.dlexpresivity}}</p>
+              <p>Direct Imports: {{baseMetrics?.directImports}}</p>
+              <p>Declared Imports: {{baseMetrics?.declaredImports}}</p>
+              <p>Actual Imports: {{baseMetrics?.actualImports}}</p>
             </div>
             <h3>Class Axioms</h3>
             <div class="base_metric">
-              <p>SubClassOfAxiomsMetric: {{classMetrics.SubClassOfAxiomsMetric}}</p>
-              <p>EquivalentClassesAxiomsMetric: {{classMetrics.EquivalentClassesAxiomsMetric}}</p>
-              <p>DisjointClassesAxiomsMetric: {{classMetrics.DisjointClassesAxiomsMetric}}</p>
-              <p>GCIMetric: {{classMetrics.GCIMetric}}</p>
-              <p>HiddenGCIMetric: {{classMetrics.HiddenGCIMetric}}</p>
+              <p>SubClassOfAxiomsMetric: {{classMetrics?.subClassOfAxiomsMetric}}</p>
+              <p>EquivalentClassesAxiomsMetric: {{classMetrics?.equivalentClassesAxiomsMetric}}</p>
+              <p>DisjointClassesAxiomsMetric: {{classMetrics?.disjointClassesAxiomsMetric}}</p>
+              <p>GCIMetric: {{classMetrics?.gcimetric}}</p>
+              <p>HiddenGCIMetric: {{classMetrics?.hiddenGCIMetric}}</p>
             </div>
             <h3>Object Property Axioms</h3>
             <div class="base_metric">
@@ -120,12 +120,12 @@
             </div>
             <h3>Data Property Axioms</h3>
             <div class="base_metric">
-              <p>SubDataPropertyOfAxiomsMetric: {{dataMetrics.SubDataPropertyOfAxiomsMetric}}</p>
-              <p>EquivalentDataPropertyAxiomsMetric: {{dataMetrics.EquivalentDataPropertyAxiomsMetric}}</p>
-              <p>DisjointDataPropertyAxiomsMetric: {{dataMetrics.DisjointDataPropertyAxiomsMetric}}</p>
-              <p>FunctionalDataPropertyAxiomsMetric: {{dataMetrics.FunctionalDataPropertyAxiomsMetric}}</p>
-              <p>DataPropertyDomainAxiomsMetric: {{dataMetrics.DataPropertyDomainAxiomsMetric}}</p>
-              <p>DataPropertyRangeAxiomsMetric: {{dataMetrics.DataPropertyRangeAxiomsMetric}}</p>
+              <p>SubDataPropertyOfAxiomsMetric: {{dataMetrics?.subDataPropertyOfAxiomsMetric}}</p>
+              <p>EquivalentDataPropertyAxiomsMetric: {{dataMetrics?.equivalentDataPropertyAxiomsMetric}}</p>
+              <p>DisjointDataPropertyAxiomsMetric: {{dataMetrics?.disjointDataPropertyAxiomsMetric}}</p>
+              <p>FunctionalDataPropertyAxiomsMetric: {{dataMetrics?.functionalDataPropertyAxiomsMetric}}</p>
+              <p>DataPropertyDomainAxiomsMetric: {{dataMetrics?.dataPropertyDomainAxiomsMetric}}</p>
+              <p>DataPropertyRangeAxiomsMetric: {{dataMetrics?.dataPropertyRangeAxiomsMetric}}</p>
             </div>
             <h3>Individual Axioms</h3>
             <div class="base_metric">
